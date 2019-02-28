@@ -51,6 +51,9 @@ paste0("X",alls$V2),alls$V2)
 DATA<-DATA[,colnames(DATA) %in% summx$snp]
 DATA<-DATA[pheno$member,]
 alls<-alls[alls$V2 %in% colnames(DATA),]
+alls<-alls[!duplicated(alls$V2),]
+rownames(alls)<-alls$V2
+alls<-alls[colnames(DATA),]
 s<-snp.rhs.estimates(formula=group ~ PC1 + PC2 + PC3 + PC4 + PC5, data=pheno, link="logit", family="binomial",
 snp.data=DATA, uncertain=TRUE)
 s<-do.call("rbind",s)
