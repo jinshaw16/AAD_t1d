@@ -2,11 +2,12 @@
 
 Code related to analysis examining whether any variants associated with type 1 diabetes (T1D) have  differential effect sizes between those diagnosed early (<7 years) or late (>13 years).
 
-## Data
+# Data
 
-The underlying data is sensitive and thus not publically available, though results will be posted on here. Though this repository has been created in an attempt to make it clear exactly how analyses and data processing were carried out.
+The underlying data is sensitive and thus not publically available, though results will be posted on here and paths to underlieing data on the DIL servers will be placed here. 
+This repository has been created in an attempt to make it clear exactly how analyses and data processing were carried out.
 
-### Prerequisites
+# Prerequisites
 
 Many R packages and other software are used throughout this analysis. 
 R packages:
@@ -32,12 +33,12 @@ SNPTEST: https://mathgen.stats.ox.ac.uk/genetics_software/snptest/snptest.html
 QCTOOL: https://www.well.ox.ac.uk/~gav/qctool_v2/
 ```
 
-### Driver scripts and running order
+# Driver scripts and running order
 
 Now outlining the analysis pipeline so if data were made available to a collaborator, they should be able to exactly reproduce results.
 
 
-# HLA analysis:
+### HLA analysis:
 ```
 readin_ichip.R	-> Reads in immunoChip data from all available collections, removes related individuals, inferred from SNP data (to 2nd degree), merges in other phenotype data including principal components generated from SNP data
 hla_imputation_redo.R	-> Uses HIBAG to impute HLA classical alleles for DRB1, DQA1, DAB1, A, B and C
@@ -46,14 +47,14 @@ hla_readin.R	-> Reads in the imputed classical HLA genotypes and converts to cla
 hla_multinomial_n.R	-> Performs multinomial logistic regressions, from which heterogeneity tests are performed comparing constrained and unconstrained models with regards to the effect size between <7s and >13s.
 ```
 
-# non-HLA analysis (primary):
+### non-HLA analysis (primary):
 ```
 impute_missing_snps.R	-> Where SNPs of interest were removed due to QC, imputing them so we can use them in the analyses. Using IMPUTE2.
 imputation_readin.R	-> Reads in the imputation results, keeping only the index SNP of interest once checking it passes all QC checks
 multinomial_redo_n.R	-> Carries out multinomial regression on all 55 T1D-associted variants to test for heterogneity of effect size between <7s and <13s using all individuals in analysis.
 multinomial_readin.R	-> Reads in the results form the above script, which were saved for examiniation in this script
 ```
-# non-HLA analyses (sensitivity):
+### non-HLA analyses (sensitivity):
 ```
 multinomial_split_iter.R	-> samples 50% of population 100 times and performs multinomial regression on all 200 datasets to test stability og results in non-HLA regions
 multinomial_split_iter_readin.R	-> reads in results of above analysis and produces Figure to show stability across iterations.
@@ -62,23 +63,23 @@ multinomial_readin_uk_only.R	-> Reads in the	results	form the above script, whic
 multinomial_sensitivity_to_cutoff.R -> multinomial regression of the 55 regions using all individuals but cutting strata at <6 and <5 instead of <7 and re-examining results
 ```
 
-# fine-mapping:
+### fine-mapping:
 ```
 guessfm_setup_uk_only.R	-> sets up GUESSFM procudure by imptuting 0.5Mb around the regions of interest, removing low quality imputed variants then running stochastic search. UK/NI individuals only included in analysis.
 imputed_test_uk.R	-> gets summary stats for the credible SNPs, these are then used in the next script.
 guessfm_readin_uk_only.R	-> reads in the results of the stochastic search and does post processing including calculating ABFs for each model including those that were pruned out for stoachstic search
 ```
 
-# other:
+### other:
 ```
 table_1.R	-> generates Table 1 in manuscript, baseline characteristics
 ```
 
-### Data locations of DIL server
+# Data locations of DIL server
 
 If anyone needs to recreate this analysis, hopefully this will be useful to anyone working at the DIL with regards to where the raw data underlying this analysis is saved.
 
-# Immunochip data
+### Immunochip data
 UK case-controls: 
 ```
 /fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/t1d-cases-preqc.(bed,bim,fam)
@@ -96,7 +97,7 @@ Warren, IDDMGEN, T1DGEN, NI GRID collections:
 /fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/finn-preqc.(bed,bim,fam)
 ```
 
-# Age-at-diagnosis data:
+### Age-at-diagnosis data:
 UK cases (GRID):
 ```
 /fs3/projects/todd/ipswich/Immunochip/support/casecontrol/t1d-subject-lookup-2015-08-06.csv
@@ -112,7 +113,7 @@ Warren, IDDMGEN, T1DGEN, NI GRID:
 /fs3/projects/todd/ipswich/shared/researcher-data-requests/jamie-2016-01-21/
 ```
 
-# Direct HLA typing data:
+### Direct HLA typing data:
 ```
 /fs3/projects/todd/chiswick/store/hla/summary-data/cc-hla-2015-11-13.tab
 ```
