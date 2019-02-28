@@ -74,7 +74,7 @@ guessfm_readin_uk_only.R	-> reads in the results of the stochastic search and do
 table_1.R	-> generates Table 1 in manuscript, baseline characteristics
 ```
 
-##Data locations of DIL server
+###Data locations of DIL server
 
 If anyone needs to recreate this analysis, hopefully this will be useful to anyone working at the DIL with regards to where the raw data underlying this analysis is saved.
 
