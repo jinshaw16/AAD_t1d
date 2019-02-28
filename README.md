@@ -80,28 +80,41 @@ If anyone needs to recreate this analysis, hopefully this will be useful to anyo
 
 #Immunochip data
 UK case-controls: 
+```
 /fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/t1d-cases-preqc.(bed,bim,fam)
 /fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/uva-controls-preqc.(bed,bim,fam)
 /fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/sanger-controls-preqc.(bed,bim,fam)
+```
 
 T1DGC families:
+```
 /fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/t1dgc-asp-preqc.(bed,bim,fam)
+```
 
 Warren, IDDMGEN, T1DGEN, NI GRID collections:
+```
 /fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/finn-preqc.(bed,bim,fam)
+```
 
 #Age-at-diagnosis data:
 UK cases (GRID):
+```
 /fs3/projects/todd/ipswich/Immunochip/support/casecontrol/t1d-subject-lookup-2015-08-06.csv
+```
 
 T1DGC families:
+```
 /fs3/projects/todd/chiswick/store/t1dgc-datasets/T1DGC.2011.03_Golden_Pedigree/T1DGC.2011.03_Golden_Pedigree/Resources/T1DGC.2011.03_Resources.csv
+```
 
 Warren, IDDMGEN, T1DGEN, NI GRID:
+```
 /fs3/projects/todd/ipswich/shared/researcher-data-requests/jamie-2016-01-21/
+```
 
 #Direct HLA typing data:
+```
 /fs3/projects/todd/chiswick/store/hla/summary-data/cc-hla-2015-11-13.tab
-
+```
 
 
