@@ -1,5 +1,6 @@
 #multinomial_readin.R
-
+library(ggplot2)
+library(gridExtra)
 
 load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
 t1dsnps$altid<-ifelse(substr(t1dsnps$id,1,1)=="1",paste0("X",t1dsnps$id),t1dsnps$id)
@@ -26,6 +27,10 @@ likelihoods$ord<-c(nrow(likelihoods):1)
 likelihoods$loci<-reorder(likelihoods$loci,likelihoods$ord)
 
 r<-likelihoods
+r$pfdr<-p.adjust(r$p, method = "BH")
+r1<-r[r$pfdr<0.1,]
+r2<-r[r$pfdr>=0.1,]
+fdrline<-(max(r2$logp)+(min(r1$logp)-max(r2$logp))/2)
 one<-ggplot(data=r, aes(x=logor3,y=as.factor(loci))) + geom_point(,colour="blue") +
 geom_point(data=r, aes(x=logor2,as.numeric(loci)+0.2), colour="green") +
 geom_point(data=r, aes(x=logor1,as.numeric(loci)+0.4), colour="red") +
@@ -38,9 +43,9 @@ scale_y_discrete(name="Locus") +
 theme(axis.title.y=element_text(size=12),
 axis.text.y=element_text(size=12))
 two<-ggplot(data=likelihoods, aes(logp, as.factor(loci))) + geom_point() +
-geom_vline(aes(xintercept=log10(0.05/56)*-1),colour="red",linetype="dashed") +
+geom_vline(aes(xintercept=log10(0.05/nrow(r))*-1),colour="red",linetype="dashed") +
 geom_vline(aes(xintercept=log10(0.05)*-1),colour="red",linetype="dotted") +
-geom_vline(aes(xintercept=1.823909), colour="red") +
+geom_vline(aes(xintercept=fdrline), colour="red") +
 scale_y_discrete(name="Locus") +
 theme(axis.title.y=element_text(size=12),
 axis.text.y=element_text(size=12)) +
@@ -71,7 +76,7 @@ axis.text.y=element_text(size=12))
 
 two<-ggplot(data=r1, aes(logp, as.factor(loci))) + geom_point() +
 geom_vline(aes(xintercept=log10(0.05/55)*-1),colour="red",linetype="dashed") +
-geom_vline(aes(xintercept=1.823909), colour="red", linetype="dotted") +
+geom_vline(aes(xintercept=fdrline), colour="red", linetype="dotted") +
 scale_y_discrete(name="Locus") +
 scale_x_continuous(name=bquote("-log"[10]~.(paste0("(p) Likelihood ratio test for heterogeneity between <7 and >13")))) +
 coord_cartesian(xlim=c(0,5)) +
