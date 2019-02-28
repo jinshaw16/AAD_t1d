@@ -5,12 +5,13 @@ library(ggplot2)
 library(epicalc)
 library(gridExtra)
 library(multinomRob)
+d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
+aaddir<-"/well/todd/users/jinshaw/aad/"
 
-ord<-read.table(file="/well/todd/users/jinshaw/aad/under_7/all_ages.fam", header=F,as.is=F)
 
 #read imputation results into R:
 read<-function(num,gene){
-A<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/HIBAG_new_redo_l",num),header=T, as.is=T)
+A<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/HIBAG_new_redo_n",num),header=T, as.is=T)
 colnames(A)[2:5]<-c(paste0(gene,"1"),paste0(gene,"2"),paste0(gene,"prob"),paste0(gene,"matching"))
 return(A)
 }
@@ -20,20 +21,28 @@ j<-j[,c(-6,-11,-16,-21,-26, -31)]
 
 
 #get pheno and covar info to merge in:
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult.R")
+load(file=paste0(d,"all_inds_unrel_postqc.RData"))
+pheno<-all@samples
 
 #names have changed over time for initial AAD publication so just re-mapping
-pheno$member<-gsub("\\.","-",pheno$member)
-pheno$member<-ifelse(substr(pheno$member,1,3)=="t1d",gsub("\\.","-",pheno$member),pheno$member)
-pheno$pedigree<-ifelse(substr(pheno$member,1,9)=="t1d-cases","t1d-cases",
-ifelse(substr(pheno$pedigree,1,6)=="400000", "sanger-controls",
-ifelse(substr(pheno$pedigree,1,6)=="500000","uva-controls",pheno$pedigree)))
-pheno$member<-ifelse(pheno$pedigree %in% c("sanger-controls", "uva-controls"), paste0(pheno$pedigree,"-",pheno$member),pheno$member)
-rownames(pheno)=pheno$member
+j$sample.id<-gsub("sanger-controls-","sanger-controls.",j$sample.id)
+j$sample.id<-gsub("t1d-cases-","t1d-cases.",j$sample.id)
+j$sample.id<-gsub("uva-controls-","uva-controls.",j$sample.id)
+j$sample.id<-gsub("ni-","ni.",j$sample.id)
+j$sample.id<-gsub("finn-","finn.",j$sample.id)
+j$sample.id<-ifelse(substr(j$sample.id,1,1) %in% c("1","2","4","5"),
+gsub("-",".",j$sample.id),j$sample.id)
+j$fins1<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\1",j$sample.id),j$sample.id)
+j$fins2<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\2",j$sample.id),j$sample.id)
+j$fins3<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\3",j$sample.id),j$sample.id)
+j$fins4<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\4",j$sample.id),j$sample.id)
+j$sample.id<-ifelse(substr(j$sample.id,1,3)=="FIN",paste0(j$fins1,j$fins2,".",j$fins4),j$sample.id)
 
+j<-j[j$sample.id %in% pheno$uniqueID,]
 pheno<-pheno[j$sample.id,]
 
 hla<-cbind(j, pheno)
+hla$onset<-as.numeric(hla$onset)
 hla$group<-ifelse(hla$affected==1,0,
 ifelse(hla$onset<7 & hla$affected==2,1,
 ifelse(hla$onset>=7 & hla$onset<13 & hla$affected==2,2,
@@ -45,9 +54,9 @@ hla[,paste0(i,"1")]<-ifelse(hla[,paste0(i,"prob")]<0.50,NA,hla[,paste0(i,"1")])
 hla[,paste0(i,"2")]<-ifelse(hla[,paste0(i,"prob")]<0.50,NA,hla[,paste0(i,"2")])
 }
 
-##################################################################################################
-#define highest and lowest risk class 2 using DRB1 and DQB1 only (DQA1 appears to mess things up:#
-##################################################################################################
+#########################################################################################################################
+#define highest and lowest risk class 2 using DRB1 and DQB1 only (DQA1 less well imputed and included mainly due to LD):#
+#########################################################################################################################
 
 hla$risk1<-ifelse(is.na(hla$DRB11) | is.na(hla$DQB11),NA,"X")
 hla$risk2<-ifelse(is.na(hla$DRB12) | is.na(hla$DQB12),NA,"X")
@@ -161,7 +170,8 @@ geom_vline(xintercept=0,colour="red",linetype="dashed") +
 scale_y_discrete(name="Classical HLA allele (vs. DRX/X)") +
 scale_x_continuous(name="T1D log-odds ratio")
 
-#trying a multinomial regression analysis
+#defining variables to use later in multinomial regression analyses:
+
 definethem<-function(varname,hap){
 allhap<-paste0(hap,"/",substr(hap,3,4))
 
@@ -189,7 +199,7 @@ hla$risk1=="DR4" & hla$risk2=="DR3", 1,
 ifelse(is.na(hla$dr),NA,0))
 
 #CLASS 1:
-#Seen evidence of DPB1*02:02 and DPB1*03:01 and DP*04:02:
+#Seen evidence in literature of T1D association with DPB1*02:02 and DPB1*03:01 and DP*04:02:
 hla$DPrisk<-ifelse(is.na(hla$DPB11) | is.na(hla$DPB12),NA,"X")
 
 hla$DPB11_d<-ifelse(!hla$DPB11 %in% c("02:02","03:01","04:02"),"X",hla$DPB11)
@@ -328,7 +338,7 @@ hla$b1801<-ifelse(hla$Brisk=="B*18:01/X",1,ifelse(is.na(hla$Brisk),NA,0))
 hla$b3906<-ifelse(hla$Brisk=="B*39:06/X",1,ifelse(is.na(hla$Brisk),NA,0))
 hla$b4403<-ifelse(hla$Brisk=="B*44:03/X",1,ifelse(is.na(hla$Brisk),NA,0))
 
-#and defining in the other way (purely additive):
+#and defining in the other way (additive):
 hla$dpb10301_1<-hla$dpb10301
 hla$dpb10402_1<-hla$dpb10402
 hla$a0201_1<-ifelse(hla$A1_d!="02:01" & hla$A2_d!="02:01",0,
@@ -343,4 +353,4 @@ hla$b1801_1<-hla$b1801
 hla$b3906_1<-hla$b3906
 hla$b4403_1<-hla$b4403
 
-save(hla, file="/well/todd/users/jinshaw/aad/under_7/hla_all.RData")
+save(hla, file="/well/todd/users/jinshaw/aad/under_7/hla_all_n.RData")

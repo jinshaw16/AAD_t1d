@@ -11,19 +11,29 @@ library(jimisc)
 library(annotSnpStats)
 
 #want to run GUESSFM on each region.
-#define regions:
+#define regions (those passing Bonferroni correction in primary analysis):
 hits<-c("imm_1_170941164", "imm_4_123335627", "imm_6_128328079", "imm_15_77022012",
 "imm_17_35158633", "imm_9_4281928",   "imm_1_205006527","imm_16_73809828",
 "imm_10_6170083")
 
 
+#load imp
 load(file="/well/todd/users/jinshaw/aad/under_7/imputation/loadeddata.RData")
+
 #read in sample info:
+d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
+#read SNP and phenotype data:
+load(file=paste0(d,"all_inds_unrel_postqc.RData"))
+pheno<-pall@samples
+pheno$onset<-as.numeric(pheno$onset)
+pheno$group<-ifelse(pheno$affected==1,0,
+ifelse(pheno$onset<7 & !is.na(pheno$onset),1,
+ifelse(pheno$onset>=7 & pheno$onset<13 & !is.na(pheno$onset),2,
+ifelse(pheno$onset>=13 & !is.na(pheno$onset),3,NA))))
 
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk.R")
+#keep only those diagnosed at <7 and from the UK:
+sample<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group) & pheno$country %in% c("NI","UK"),]
 
-#keep only those diagnosed at <7 and from the UK or central europe:
-sample<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group),]
 sample$t1d<-ifelse(sample$affected==2,1,ifelse(sample$affected==1,0,NA))
 tcols<-rownames(ps[[1]])
 
@@ -49,7 +59,7 @@ jobname=paste0(snp,"_uk"),projectletter="c", qletter="c", qlength="short")
 system(paste0("chmod a=rwx ~/programs/aad/under_7/snptest_scripts/",snp,"_uk.sh"))
 system(paste0("qsub ~/programs/aad/under_7/snptest_scripts/",snp,"_uk"))
 }
-#lapply(hits, dosnptest)
+lapply(hits, dosnptest)
 
 #run GUESSFM
 runguessfm<-function(snp){

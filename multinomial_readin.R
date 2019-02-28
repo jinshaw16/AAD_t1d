@@ -1,157 +1,16 @@
-#multinomial_redo.R
-library(snpStats)
-library(annotSnpStats)
-library(snpStatsWriter)
-library(humarray)
-library(gridExtra)
-library(multinomRob)
-library(ggplot2)
+#multinomial_readin.R
 
-
-d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
-#read SNP and phenotype data:
-load(file=paste0(d,"all_inds_unrel_postqc.RData"))
-
-all@samples$onset<-as.numeric(all@samples$onset)
-all@samples$group<-ifelse(all@samples$affected==1,0,
-ifelse(all@samples$onset<7 & !is.na(all@samples$onset),1,
-ifelse(all@samples$onset>=13 & !is.na(all@samples$onset),2,NA)))
-
-
-#Define the 55 T1D regions we want to examine (from various literature):
-t1dsnps<-c("rs2476601","rs12068671",  "rs6691977", "rs3024505", "rs13415583",
-           "rs4849135", "rs2111485", "rs35667974", "rs72871627",
-"rs3087243", "rs113010081", "rs6819058","rs67797421", "rs2611215", "rs11954020",
-"rs72975913","rs72928038", "rs1538171", "rs62447205", "rs10277986", "rs6476839",
-"rs61839660", "rs11594656","rs6602437", "rs41295121",
-"rs12416116", "rs689", "rs72853903", "rs917911", "rs705705",
-"rs653178", "rs9585056", "rs1456988", "rs56994090", "rs72727394",
-"rs34593439", "rs151234", "rs12927355",
-"rs193778", "rs8056814", "rs12453507",
-"rs757411", "rs1052553", "rs1893217", "rs12971201",
-"rs1615504", "rs34536443", "rs12720356", "rs402072", "rs516246",
-"rs6043409", "rs11203202", "rs6518350", "rs4820830", "rs229533")
-
-t1dloci<-c("PTPN22", "TNFSF4","CAMSAP2",
-"IL10", "AFF3", "ACOXL",
-"IFIH1 (1)", "IFIH1 (2)", "IFIH1 (3)",
-"CTLA4", "CCR5", "IL2/IL21 (1)", "IL2/IL21 (2)", "CPE",
-"IL7R","PTPRK/THEMIS", "BACH2", "CENPW",
-"IKZF1", "COBL",
-"GLIS3", "IL2RA (1)", "IL2RA (2)", "IL2RA (3)","IL2RA (4)",
-"PTEN","INS (1)","INS (2)", "CD69", "IKZF4",
-"SH2B3", "GPR183", "LINC01550",
-"MEG3","RASGRP1", "CTSH", "IL27", "DEXI (1)",
-"DEXI (2)", "CTRB1","IKZF3",
-"CCR7", "MAPT","PTPN2 (1)", "PTPN2 (2)", "CD226", "TYK2 (1)", "TYK2 (2)", "PRKD2",
-"FUT2", "SIRPG",
-"UBASH3A", "ICOSLG", "HORMAD2",
-"C1QTNF6")
-
-
-t1dsnps<-data.frame(snp=t1dsnps, loci=t1dloci)
-t1dsnps$id<-rs.to.id(t1dsnps$snp)
-t1dsnps$id<-gsub(".*,","",t1dsnps$id)
-t1dsnps$id<-ifelse(substr(t1dsnps$id,1,3)=="seq",gsub("_","-", t1dsnps$id),t1dsnps$id)
-t1dsnps$id<-ifelse(substr(t1dsnps$id,1,4)=="X1kg", substr(t1dsnps$id,2,100000),t1dsnps$id)
-t1dsnps$ord<-c(1:nrow(t1dsnps))
-t1dsnps$snp<-as.character(t1dsnps$snp)
-p<-t1dsnps[!t1dsnps$id %in% colnames(all),]
-
-
-#keep only the ones we want to test:
-g<-all[,colnames(all) %in% t1dsnps$id]
-g<-as(g,"SnpMatrix")
-cs<-col.summary(g)
-w<-which(cs$RAF>0.5)
-g<-switch.alleles(g,snps=w)
-b<-as(g,"numeric")
-
-#and the imputed ones:
-getsnp<-function(snp){
-load(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_n_clean.RData"))
-cs<-col.summary(DATA)
-w<-which(cs$RAF>0.5)
-DATA<-switch.alleles(DATA,snps=w)
-d<-as(DATA[rownames(DATA) %in% rownames(g),grepl(snp,colnames(DATA))],"numeric")
-colnames(d)<-snp
-b<<-cbind2(b,d)
-return(d)
-}
-l<-lapply(p$id,getsnp)
-colnames(b)<-gsub(":.*","",colnames(b))
-pheno<-all@samples
-
-table(rownames(b)==rownames(pheno))
-pheno<-cbind(pheno,b)
-p1<-pheno
-save(b,pheno,t1dsnps, file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
 
 load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
 t1dsnps$altid<-ifelse(substr(t1dsnps$id,1,1)=="1",paste0("X",t1dsnps$id),t1dsnps$id)
 colnames(pheno)<-ifelse(substr(colnames(pheno),1,1)=="1",paste0("X",colnames(pheno)),colnames(pheno))
 t1dsnps$altid<-ifelse(!t1dsnps$altid %in% colnames(pheno),t1dsnps$snp,t1dsnps$altid)
 
-#now perform multinomial regression (remove 7-13s for the first 2 models):
-ph<-pheno[pheno$group %in% c(0,1,2) & !is.na(pheno$group),]
-ph$g0<-ifelse(ph$group==0,1,ifelse(ph$group!=0,0,NA))
-ph$g1<-ifelse(ph$group==1,1,ifelse(ph$group!=1,0,NA))
-ph$g2<-ifelse(ph$group==2,1,ifelse(ph$group!=2,0,NA))
-pheno$group<-ifelse(pheno$affected==1,0,
-ifelse(pheno$onset<7 & !is.na(pheno$onset),1,
-ifelse(pheno$onset>=7 &pheno$onset<13 & !is.na(pheno$onset),2,
-ifelse(pheno$onset>=13 & !is.na(pheno$onset),3,NA))))
-pheno$g0<-ifelse(pheno$group==0,1,ifelse(pheno$group!=0,0,NA))
-pheno$g1<-ifelse(pheno$group==1,1,ifelse(pheno$group!=1,0,NA))
-pheno$g2<-ifelse(pheno$group==2,1,ifelse(pheno$group!=2,0,NA))
-pheno$g3<-ifelse(pheno$group==3,1,ifelse(pheno$group!=3,0,NA))
-
-
-
-#carry out the multinomial regressions:
-getlikelihoods<-function(snpname){
-#model 1: allow the beta for the SNP to vary for both:
-form0<-as.formula(paste0("g0 ~ 0"))
-form1<-as.formula(paste0("g1 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + `",snpname,"`"))
-form2<-as.formula(paste0("g2 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + `",snpname,"`"))
-
-one<-multinomRob(model=list(form0,form1,form2),data=ph, print.level=1, MLEonly=T)
-llk1<-one$value
-
-equals0<-as.formula(paste0("g1 ~ `",snpname,"` + 0"))
-equals1<-as.formula(paste0("g2 ~ `",snpname,"` + 0"))
-#model 2: constrain betas to equal each other:
-two<-multinomRob(model=list(form0,form1,form2),
-equality=list(list(equals0,equals1)), data=ph, print.level=1, MLEonly=T)
-llk2<-two$value
-l<-data.frame(unconstrained=llk1, constrained=llk2)
-l$constrained=l$constrained*-1
-l$unconstrained=l$unconstrained*-1
-l$loglambda<-l$constrained-l$unconstrained
-#compare using likelihood ratio test:
-l$chisq<-l$loglambda*-2
-l$p<-pchisq(l$chisq,1, lower.tail=F)
-#model 3: get estimates for all 3 age group strata:
-form0<-as.formula(paste0("g0 ~ 0"))
-form1<-as.formula(paste0("g1 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + `",snpname,"`"))
-form2<-as.formula(paste0("g2 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + `",snpname,"`"))
-form3<-as.formula(paste0("g3 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + `",snpname,"`"))
-three<-multinomRob(model=list(form0,form1,form2,form3),data=pheno, print.level=1, MLEonly=T)
-
-l1<-data.frame(logor1=three$coefficients[nrow(three$coefficients),2], logse1=one$se[nrow(three$coefficients),2],
-logor2=three$coefficients[nrow(three$coefficients),3], logse2=three$se[nrow(three$coefficients),3],
-logor3=three$coefficients[nrow(three$coefficients),4],logse3=three$se[nrow(three$coefficients),4])
-l1$lb1<-l1$logor1-(qnorm(0.975)*l1$logse1)
-l1$ub1<-l1$logor1+(qnorm(0.975)*l1$logse1)
-l1$lb2<-l1$logor2-(qnorm(0.975)*l1$logse2)
-l1$ub2<-l1$logor2+(qnorm(0.975)*l1$logse2)
-l1$lb3<-l1$logor3-(qnorm(0.975)*l1$logse3)
-l1$ub3<-l1$logor3+(qnorm(0.975)*l1$logse3)
-l<-cbind(l,l1)
+getlik<-function(snpname){
+load(file=paste0("/well/todd/users/jinshaw/aad/under_7/results/",snpname,"_n.RData"))
 return(l)
 }
-
-likelihoods<-lapply(t1dsnps$altid,getlikelihoods)
+likelihoods<-lapply(t1dsnps$altid,getlik)
 likelihoods<-do.call("rbind", likelihoods)
 likelihoods$snp=t1dsnps$snp
 likelihoods$id<-t1dsnps$id
@@ -207,7 +66,7 @@ geom_errorbarh(data=r1, aes(xmin=lb1,xmax=ub1, y=as.numeric(loci)+0.4),colour="r
 geom_vline(xintercept=0, colour="red", linetype="dashed") +
 scale_x_continuous(name="T1D log-odds ratio for those diagnosed under 7 (red), 7-13 (green) and over 13 (blue)") +
 scale_y_discrete(name="Locus") +
-theme(axis.title.y=element_text(size=15), 
+theme(axis.title.y=element_text(size=15),
 axis.text.y=element_text(size=12))
 
 two<-ggplot(data=r1, aes(logp, as.factor(loci))) + geom_point() +
@@ -216,7 +75,7 @@ geom_vline(aes(xintercept=1.823909), colour="red", linetype="dotted") +
 scale_y_discrete(name="Locus") +
 scale_x_continuous(name=bquote("-log"[10]~.(paste0("(p) Likelihood ratio test for heterogeneity between <7 and >13")))) +
 coord_cartesian(xlim=c(0,5)) +
-theme(axis.title.y=element_text(size=15), 
+theme(axis.title.y=element_text(size=15),
 axis.text.y=element_text(size=12))
 
 png(file="/well/todd/users/jinshaw/output/aad/under_7/multinom/redo/het_tests_all_inc_midrange_no_nonsig_n.png", res=800,
@@ -225,23 +84,20 @@ grid.arrange(one,two,ncol=2)
 dev.off()
 
 
-
-
 ########################
 #NOW FOR THE MAFS PLOTS#
 ########################
 #read in all the unrelateds - including the mid range individuals
 load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
-t1dsnps$loci<-as.character(t1dsnps$loci)
-t1dsnps$loci<-ifelse(t1dsnps$loci=="FASLG","TNFSF4",t1dsnps$loci)
-t1dsnps$loci<-ifelse(t1dsnps$loci=="BCAR1","CTRB1",t1dsnps$loci)
+r<-read.table(file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_n.txt",
+header=T, as.is=T, sep="\t")
+r$pfdr<-p.adjust(r$p, method = "BH")
+r1<-r[r$pfdr<0.1,]
+
 #get most likely call for the variants:
 g<-as(b,"SnpMatrix")
-load(file="/well/todd/users/jinshaw/aad/under_7/all_combined_alligned.RData")
-all<-g
-
-a<-as(all,"numeric")
-samp<-pheno[,c(1:23)]
+a<-as(g,"numeric")
+samp<-pheno[,!colnames(pheno) %in% t1dsnps$id]
 samp<-cbind(samp,a)
 cases<-samp[samp$affected==2,]
 cases$logage<-log(cases$onset)
@@ -251,9 +107,7 @@ cases$logage<-log(cases$onset)
 #plots by allele:
 library(plyr)
 library(dplyr)
-hits<-c("imm_1_170947654", "imm_6_128335625", "imm_15_77022012",
-"imm_17_35306733", "imm_9_4280823",   "imm_1_205006527","imm_16_73809828",
-"imm_10_6170083")
+hits<-r1$altid
 
 plotagebysnp<-function(snp){
 case<-cases[!is.na(cases[,snp]),]
@@ -276,7 +130,7 @@ d<-ggplot(data=case, aes(x = factor(case[,snp]), y = logage))+
    scale_x_discrete(name=paste0("Copies of minor allele at ",t1dsnps[t1dsnps$id==snp,"snp"]," (",t1dsnps[t1dsnps$id==snp,"loci"],")")) +
    coord_cartesian(ylim=c(1.85,2.15)) +
    annotate("text", x=as.numeric(g[,1])+1.2, y=2.15, label=paste0("N=",g$N))
-ggsave(d,file=paste0("/well/todd/users/jinshaw/output/aad/under_7/mafs/redo/",gsub("/"," ",t1dsnps[t1dsnps$id==snp,"loci"]),"_by_allele.png"),
+ggsave(d,file=paste0("/well/todd/users/jinshaw/output/aad/under_7/mafs/redo/",gsub("/"," ",t1dsnps[t1dsnps$id==snp,"loci"]),"_by_allele_n.png"),
 dpi=400, height=20, width=20, units="cm")
 }
 lapply(hits, plotagebysnp)
@@ -304,11 +158,11 @@ ifelse(samp$onset>16 & samp$onset<=17,17,
 ifelse(samp$onset>17 & samp$onset<=18,18,samp$onset)))))))))))))))))))
 samp$onset<-ceiling(samp$onset)
 rownames(samp)<-samp$uniqueID
-samp<-samp[rownames(all),]
+samp<-samp[rownames(g),]
 
-cs<-col.summary(all)
+cs<-col.summary(g)
 w<-which(cs$RAF>0.5)
-all<-switch.alleles(all, snps=w)
+g<-switch.alleles(g, snps=w)
 
 samp$onset<-ifelse(samp$onset>=16 & samp$onset<=20,18,
 ifelse(samp$onset>20 & samp$onset<=25, 23,
@@ -320,10 +174,10 @@ t<-names(table(samp$onset))
 getmafsall<-function(snp){
 getcs<-function(onset){
 if(onset==0){
-a<-all[rownames(all) %in% rownames(samp[samp$affected==1,]),snp]
+a<-g[rownames(g) %in% rownames(samp[samp$affected==1,]),snp]
 }
 if(onset!=0){
-a<-all[rownames(all) %in% rownames(samp[samp$affected==2 & samp$onset==onset,]),snp]
+a<-g[rownames(g) %in% rownames(samp[samp$affected==2 & samp$onset==onset,]),snp]
 }
 cs<-col.summary(a)
 rs<-row.summary(a)
@@ -348,9 +202,10 @@ geom_hline(yintercept=l1[l1$onset==0,"maf"],colour="red", linetype="dashed")  +
 geom_vline(xintercept=6.5,colour="red", linetype="dashed") +
 geom_vline(xintercept=12.5,colour="red", linetype="dashed")
 
-ggsave(g,file=paste0("/well/todd/users/jinshaw/output/aad/under_7/mafs/redo/",gsub("/"," ",t1dsnps[t1dsnps$id==snp,"loci"]),"_all.png"),
+ggsave(g,file=paste0("/well/todd/users/jinshaw/output/aad/under_7/mafs/redo/",gsub("/"," ",t1dsnps[t1dsnps$id==snp,"loci"]),"_all_n.png"),
 dpi=400, height=20, width=20, units="cm")
 }
 
 lapply(hits,getmafsall)
+
 
