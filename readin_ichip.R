@@ -332,27 +332,16 @@ cat(paste0("/apps/well/plink/1.90b3/plink --bfile ",aaddir,"all_ages_n --exclude
 " --make-bed --out ",aaddir,"forpcad_n\n"))
 cat(paste0("~/software/plink2 --bfile ",aaddir,"forpcad_n ",
 "--exclude range /well/todd/users/jinshaw/aad/under_7/mhc.txt --make-bed --out ",aaddir,"forpcad_nomhc_n\n"))
-#calculate principal components in controls
-cat(paste0("/apps/well/plink/1.90b3/plink --bfile ",aaddir,"forpcad_nomhc_n --allow-no-sex --filter-controls --make-bed --out ",aaddir,"controls_pruned_n\n"))
-cat(paste0("/apps/well/plink/1.90b3/plink --bfile ",aaddir,"forpcad_nomhc_n --allow-no-sex --filter-cases --make-bed --out ",aaddir,"cases_pruned_n\n"))
-cat(paste0("~/software/plink2 --bfile ",aaddir,"controls_pruned_n --allow-no-sex --freq --pca approx 10 var-wts --out ",aaddir,"controls_pcs\n"))
-
-cat(paste0("~/software/plink2 --bfile ",aaddir,"cases_pruned_n --read-freq ",aaddir,"/controls_pcs.afreq --score ",aaddir,"/controls_pcs.eigenvec.var 2 3 ",
-"header-read no-mean-imputation variance-standardize --score-col-nums 5-14 --allow-no-sex --out ",aaddir,"/pca_proj_cases_onto_controls --threads 32\n"))
-
-#get controls pcs on the same scale as the projected case pcs
-cat(paste0("~/software/plink2 --bfile ",aaddir,"controls_pruned_n --read-freq ",aaddir,"/controls_pcs.afreq --score ",aaddir,"controls_pcs.eigenvec.var 2 3 ",
-"header-read no-mean-imputation variance-standardize --score-col-nums 5-14 --allow-no-sex --out ",aaddir,"pca_proj_controls --threads 32\n"))
+#calculate principal components
+cat(paste0("~/software/plink2 --bfile ",aaddir,"forpcad_nomhc_n --allow-no-sex --pca approx 10 --out ",aaddir,"pcs\n"))
 sink()
 
-#system("qsub ~/programs/aad/under_7/pccalc.sh")
+system("qsub ~/programs/aad/under_7/pccalc.sh")
 
 aaddir<-"/well/todd/users/jinshaw/aad/"
-pcs1<-read.table(file=paste0(aaddir,"pca_proj_controls.sscore"),header=T, as.is=T,comment.char="")
-pcs2<-read.table(file=paste0(aaddir,"pca_proj_cases_onto_controls.sscore"),header=T,as.is=T,comment.char="")
-pcs<-rbind(pcs1,pcs2)
+pcs<-read.table(file=paste0(aaddir,"pcs.eigenvec"),header=T, as.is=T,comment.char="")
 rownames(pcs)<-pcs$IID
-pcs<-pcs[,c(6:15)]
+pcs<-pcs[,c(3:12)]
 pcs<-pcs[rownames(all),]
 colnames(pcs)<-paste0("PC",c(1:10))
 
