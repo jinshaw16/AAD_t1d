@@ -310,8 +310,8 @@ hla$Brisk<-reorder(hla$Brisk, hla$ordB)
 
 
 #and one C disease-associated allele:C*03:03
-hla$C1_d<-ifelse(!hla$C1 %in% c("03:03") & !is.na(hla$C1),"X",ifelse(is.na(hla$C1),NA,hla$C1)
-hla$C2_d<-ifelse(!hla$C2 %in% c("03:03") & !is.na(hla$C2),"X",ifelse(is.na(hla$C2),NA,hla$C2)
+hla$C1_d<-ifelse(!hla$C1 %in% c("03:03") & !is.na(hla$C1),"X",ifelse(is.na(hla$C1),NA,hla$C1))
+hla$C2_d<-ifelse(!hla$C2 %in% c("03:03") & !is.na(hla$C2),"X",ifelse(is.na(hla$C2),NA,hla$C2))
 hla$Crisk<-ifelse(is.na(hla$C1) | is.na(hla$C2),NA,"X")
 invisible(mapply(redefclass1, gene=c(rep("C",2)),
 varname=c(rep("Crisk",2)),
