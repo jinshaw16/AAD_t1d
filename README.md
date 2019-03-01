@@ -21,6 +21,7 @@ multinomRob: https://cran.r-project.org/web/packages/multinomRob/index.html
 GUESSFM: https://github.com/chr1swallace/GUESSFM
 R2GUESS: https://cran.r-project.org/web/packages/R2GUESS/index.html
 HiBag: https://bioconductor.org/packages/release/bioc/html/HIBAG.html
+coloc: https://cran.r-project.org/web/packages/coloc/index.html
 ```
 
 Other software:
@@ -73,6 +74,7 @@ guessfm_readin_uk_only.R	-> reads in the results of the stochastic search and do
 ### other:
 ```
 table_1.R	-> generates Table 1 in manuscript, baseline characteristics
+coloc_ikzf3.R	-> Formally tests for colocalisation between disease and whole blood eQTLs using coloc
 ```
 
 # Data locations of DIL server
