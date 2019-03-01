@@ -20,6 +20,8 @@ likelihoods$altid<-t1dsnps$altid
 write.table(likelihoods, file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_n.txt",
 col.names=T, row.names=F, quote=F, sep="\t")
 
+likelihoods<-read.table(file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_n.txt",
+header=T, sep="\t", as.is=T)
 likelihoods$logp<-log10(likelihoods$p)*-1
 likelihoods<-likelihoods[order(-likelihoods$logp),]
 likelihoods$loci<-as.factor(likelihoods$loci)
