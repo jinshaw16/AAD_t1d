@@ -202,8 +202,8 @@ ifelse(is.na(hla$dr),NA,0))
 #Seen evidence in literature of T1D association with DPB1*02:02 and DPB1*03:01 and DP*04:02:
 hla$DPrisk<-ifelse(is.na(hla$DPB11) | is.na(hla$DPB12),NA,"X")
 
-hla$DPB11_d<-ifelse(!hla$DPB11 %in% c("02:02","03:01","04:02"),"X",hla$DPB11)
-hla$DPB12_d<-ifelse(!hla$DPB12 %in% c("02:02","03:01","04:02"),"X",hla$DPB12)
+hla$DPB11_d<-ifelse(!hla$DPB11 %in% c("02:02","03:01","04:02") & !is.na(hla$DPB11),"X",ifelse(is.na(hla$DPB11),NA,hla$DPB11))
+hla$DPB12_d<-ifelse(!hla$DPB12 %in% c("02:02","03:01","04:02") & !is.na(hla$DPB11),"X",ifelse(is.na(hla$DPB12),NA,hla$DPB12))
 redefclass1<-function(gene,h1,h2,label,varname){
 hla[,varname]<-ifelse((hla[,paste0(gene,"1_d")]==h1 & hla[,paste0(gene,"2_d")]==h2) |
 (hla[,paste0(gene,"1_d")]==h2 & hla[,paste0(gene,"2_d")]==h1),label, hla[,varname])
@@ -234,8 +234,8 @@ hla$DPrisk<-reorder(hla$DPrisk,hla$ordDP)
 
 #There are a number of potentially disease-associated A allele haplotypes:
 #02:01, 11:01, 24:02, 66:01 and 32:01
-hla$A1_d<-ifelse(!hla$A1 %in% c("02:01","11:01","24:02","66:01","32:01"),"X",hla$A1)
-hla$A2_d<-ifelse(!hla$A2 %in% c("02:01","11:01","24:02","66:01","32:01"),"X",hla$A2)
+hla$A1_d<-ifelse(!hla$A1 %in% c("02:01","11:01","24:02","66:01","32:01") & !is.na(hla$A1),"X", ifelse(is.na(hla$A1),NA,hla$A1))
+hla$A2_d<-ifelse(!hla$A2 %in% c("02:01","11:01","24:02","66:01","32:01") & !is.na(hla$A2),"X", ifelse(is.na(hla$A2),NA,hla$A2))
 hla$Arisk<-ifelse(is.na(hla$A1) | is.na(hla$A2),NA,"X")
 invisible(mapply(redefclass1, gene=c(rep("A",20)),
 varname=c(rep("Arisk",20)),
@@ -277,8 +277,8 @@ hla$Arisk<-reorder(hla$Arisk,hla$ordA)
 
 #There are a number of potentially disease-associated B allele haplotypes:
 #07:02, 18:01, 35:02, 39:06 and 44:03
-hla$B1_d<-ifelse(!hla$B1 %in% c("07:02","18:01","35:02","39:06","44:03"),"X",hla$B1)
-hla$B2_d<-ifelse(!hla$B2 %in% c("07:02","18:01","35:02","39:06","44:03"),"X",hla$B2)
+hla$B1_d<-ifelse(!hla$B1 %in% c("07:02","18:01","35:02","39:06","44:03") & !is.na(hla$B1),"X",ifelse(is.na(hla$B1),NA,hla$B1))
+hla$B2_d<-ifelse(!hla$B2 %in% c("07:02","18:01","35:02","39:06","44:03") & !is.na(hla$B2),"X",ifelse(is.na(hla$B2),NA,hla$B2))
 hla$Brisk<-ifelse(is.na(hla$B1) | is.na(hla$B2),NA,"X")
 invisible(mapply(redefclass1, gene=c(rep("B",17)),
 varname=c(rep("Brisk",17)),
@@ -310,8 +310,8 @@ hla$Brisk<-reorder(hla$Brisk, hla$ordB)
 
 
 #and one C disease-associated allele:C*03:03
-hla$C1_d<-ifelse(!hla$C1 %in% c("03:03"),"X",hla$C1)
-hla$C2_d<-ifelse(!hla$C2 %in% c("03:03"),"X",hla$C2)
+hla$C1_d<-ifelse(!hla$C1 %in% c("03:03") & !is.na(hla$C1),"X",ifelse(is.na(hla$C1),NA,hla$C1)
+hla$C2_d<-ifelse(!hla$C2 %in% c("03:03") & !is.na(hla$C2),"X",ifelse(is.na(hla$C2),NA,hla$C2)
 hla$Crisk<-ifelse(is.na(hla$C1) | is.na(hla$C2),NA,"X")
 invisible(mapply(redefclass1, gene=c(rep("C",2)),
 varname=c(rep("Crisk",2)),
