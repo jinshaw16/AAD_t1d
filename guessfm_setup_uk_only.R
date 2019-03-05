@@ -18,27 +18,23 @@ likelihoods<-likelihoods[likelihoods$p<(0.05/nrow(likelihoods)),]
 hits<-likelihoods$id
 
 
-#read in sample info (UK only):
-#r<-read.plink(fam="/well/todd/users/jinshaw/aad/all_ages_n.fam",
-#bed="/well/todd/users/jinshaw/aad/all_ages_n.bed",
-#bim="/well/todd/users/jinshaw/aad/all_ages_n.bim")
-#r<-annot.plink(r)
+d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
+#read SNP and phenotype data:
+load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
 
-#keep only those diagnosed at <7:
-sample<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group),]
+h<-read.table(file="/well/todd/users/jinshaw/t1d_risk/immunochip/ic-sanger-b58c.bim",header=F, as.is=T)
+colnames(h)<-c("chromosome","snp.name","cM","position","allele.1","allele.2")
+r<-all
 
-sample$t1d<-ifelse(sample$affected==2,1,ifelse(sample$affected==1,0,NA))
-#r<-r[rownames(r) %in% rownames(sample),]
-
-loaddata<-function(snp){
-h<-r@snps[r@snps$snp.name==snp,]
-chr<-h$chromosome
-pos<-h$position
+#Readin the PLINK file of all the individuals and define a 0.5MB region around the lead SNP for imputation:
+imputethem<-function(snp){
+h1<-h[h$snp.name==snp,]
+chr<-h1$chromosome
+pos<-h1$position
 min<-pos-250000
 max<-pos+250000
-reg<-r@snps[r@snps$chromosome==chr & r@snps$position>min & r@snps$position<max,]
+reg<-h[h$chromosome==chr & h$position>min & h$position<max,]
 #allign with 1000G for imputation:
 tg<-read.table(file=paste0("/well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chr,".legend.gz"), header=T,as.is=T)
 reg<-liftthem(reg, chain="hg18ToHg19.over.chain",
@@ -54,6 +50,9 @@ ifelse(reg$allele.2=="C","G",NA))))
 t<-tg[tg$position %in% reg$position37,]
 p<-r[,colnames(r) %in% reg$snp.name]
 cs<-col.summary(p)
+reg<-reg[reg$snp.name %in% rownames(cs),]
+rownames(reg)<-reg$snp.name
+reg<-reg[rownames(cs),]
 reg<-cbind(reg,cs)
 #remove SNPs that are duplicates in the 1000 genomes if they have a MAF<0.01 in europeans:
 d<-t[duplicated(t$position),]
@@ -85,7 +84,7 @@ rownames(b)<-b$snp.name
 p<-p[,p@snps$snp.name %in% b$snp.name]
 b<-b[colnames(p),]
 colnames(p)<-b$id
-write.impute(pedfile=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/uk_",snp),
+write.impute(pedfile=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_n"),
 as(p,"SnpMatrix"),
 a1=b$allele.1,
 a2=b$allele.2,
@@ -93,46 +92,75 @@ bp=b$position)
 min<-min(b$position)
 max<-max(b$position)
 #now write a script to run this through impute2:
-sink(file=paste0("~/programs/aad/under_7/imputation/uk_",snp))
+sink(file=paste0("~/programs/aad/under_7/imputation/",snp,"_n"))
 cat(paste0("#!/bin/bash
 #$ -cwd -V
 #$ -N ",snp," -j y
 #$ -P todd.prjc -q long.qc
 
-/apps/well/impute2/2.3.0/impute2 -g /well/todd/users/jinshaw/aad/under_7/imputation/uk_",snp,
-" -m /well/1000G/WTCHG/1000GP_Phase3/genetic_map_chr",chr,"_combined_b37.txt -int ",min-10000," ",max+10000,
+/apps/well/impute2/2.3.0/impute2 -g /well/todd/users/jinshaw/aad/under_7/imputation/",snp,
+"_n -m /well/1000G/WTCHG/1000GP_Phase3/genetic_map_chr",chr,"_combined_b37.txt -int ",min-10000," ",max+10000,
 " -h /well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chr,
 ".hap.gz -l /well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chr,".legend.gz -o /well/todd/users/jinshaw/aad/under_7/imputation/",
-snp,"_out_uk_n\n"))
+snp,"_n_out\n"))
 sink()
-system(paste0("qsub ~/programs/aad/under_7/imputation/uk_",snp))
+
+system(paste0("chmod a=rwx ~/programs/aad/under_7/imputation/",snp,"_n"))
+system(paste0("qsub ~/programs/aad/under_7/imputation/",snp,"_n"))
 return(p)
 }
 
-#ps<-lapply(hits,loaddata)
-#names(ps)<-hits
-#save(ps,file="/well/todd/users/jinshaw/aad/under_7/imputation/loadeddata_uk.RData")
+loadeddate<-lapply(hits, imputethem)
+save(loadeddate,file="/well/todd/users/jinshaw/aad/under_7/imputation/bonferonni_imp.RData")
 
+#load imp
+load(file="/well/todd/users/jinshaw/aad/under_7/imputation/bonferonni_imp.RData")
 
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
+#keep only those diagnosed at <7 and from the UK:
+sample<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group) & pheno$country %in% c("NI","UK"),]
 
+sample$t1d<-ifelse(sample$affected==2,1,ifelse(sample$affected==1,0,NA))
+tcols<-rownames(loadeddate[[1]])
 
 #as part of QC, want to run the association statsictics through SNPTEST so can remove artififactually associated SNPs prior to running GEUSSFM:
 sample$missing<-0
-sample$t1d<-ifelse(sample$affected==2,1,ifelse(sample$affected==1,0,NA))
-s<-sample[,c("uniqueID","member","missing","t1d","PC1","PC2","PC3","PC4","PC5")]
-colnames(s)<-c("ID_1","ID_2","missing","t1d","PC1","PC2","PC3","PC4","PC5")
-for (i in 1:ncol(s)){
-s[,i]<-as.character(s[,i])
+s<-sample[,c("uniqueID")]
+write.table(s, file="/well/todd/users/jinshaw/aad/under_7/imputation/uk",col.names=F,row.names=F,quote=F)
+
+#take the PCs from the UK=specific analysis:
+all<-all[tcols,]
+s1<-all@samples
+s2<-s1[s1$uniqueID %in% sample$uniqueID,]
+s2<-s2[rownames(sample),]
+s3<-s1[!s1$uniqueID %in% sample$uniqueID,]
+for (i in c(1:10)){
+s2[,paste0("PC",i)]<-sample[,paste0("PC",i)]
 }
-headit<-data.frame(ID_1=0,ID_2=0,missing=0,t1d="B",PC1="C",PC2="C",PC3="C",PC4="C",PC5="C")
-s<-rbind(headit,s)
-write.table(s, file="/well/todd/users/jinshaw/aad/under_7/imputation/uk.geno",col.names=T,row.names=F,quote=F,sep=" ")
+s1<-rbind(s2,s3)
+s1<-s1[tcols,]
 
-
+#generate SNPTEST sample file:
+headit<-data.frame(ID_1=0,ID_2=0,missing=0,t1d="B",PC1="C",PC2="C",PC3="C",PC4="C",PC5="C",PC6="C",PC7="C",PC8="C",PC9="C",PC10="C")
+s1$ID_1=s1$uniqueID
+s1$ID_2=s1$uniqueID
+s1$missing<-0
+s1$t1d<-ifelse(s1$affected==2,1,ifelse(s1$affected==1,0,NA))
+s1<-s1[,c("ID_1","ID_2","missing","t1d","PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10")]
+for (vars in colnames(s1)){
+s1[,vars]<-as.character(s1[,vars])
+}
+s1<-rbind(headit,s1)
+write.table(s1,file="/well/todd/users/jinshaw/aad/under_7/imputation/geno.sample",col.names=T,row.names=F,sep=" ",quote=F)
 dosnptest<-function(snp){
 sink(file=paste0("~/programs/aad/under_7/snptest_scripts/",snp,"_uk.sh"))
+cat(paste0("qctool -g /well/todd/users/jinshaw/aad/under_7/imputation/",snp,
+"_out -s /well/todd/users/jinshaw/aad/under_7/imputation/geno.sample -filetype gen -incl-samples ",
+"/well/todd/users/jinshaw/aad/under_7/imputation/uk -os /well/todd/users/jinshaw/aad/under_7/imputation/uk.sample_",snp,
+" -og /well/todd/users/jinshaw/aad/under_7/imputation/uk_out_",snp," -ofiletype gen\n"))
+
 cat(paste0("/apps/well/snptest/2.5.4-beta3_CentOS6.6_x86_64_dynamic/snptest_v2.5.4-beta3 ",
-"-data /well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_out_uk_n /well/todd/users/jinshaw/aad/under_7/imputation/uk.geno",
+"-data /well/todd/users/jinshaw/aad/under_7/imputation/uk_out_",snp," /well/todd/users/jinshaw/aad/under_7/imputation/uk.sample_",snp,
 " -pheno t1d -frequentist 1 -method newml -cov_all_continuous -o /well/todd/users/jinshaw/aad/under_7/imputation/snptest/",snp,"_uk"))
 sink()
 create_job(path=paste0("~/programs/aad/under_7/snptest_scripts/"),subname=paste0(snp,"_uk"),
@@ -140,13 +168,21 @@ jobname=paste0(snp,"_uk"),projectletter="c", qletter="c", qlength="short")
 system(paste0("chmod a=rwx ~/programs/aad/under_7/snptest_scripts/",snp,"_uk.sh"))
 system(paste0("qsub ~/programs/aad/under_7/snptest_scripts/",snp,"_uk"))
 }
-#lapply(hits, dosnptest)
+lapply(hits, dosnptest)
+
+
 
 #run GUESSFM
-load(file="/well/todd/users/jinshaw/aad/under_7/imputation/loadeddata_uk.RData")
-tcols<-rownames(ps[[1]])
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
+#keep only those diagnosed at <7 and from the UK:
+sample<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group) & pheno$country %in% c("NI","UK"),]
+
+sample$t1d<-ifelse(sample$affected==2,1,ifelse(sample$affected==1,0,NA))
+
 runguessfm<-function(snp){
-DATA<-read.impute(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_out_uk_n"), rownames=tcols)
+tcols<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/uk.sample_",snp),skip=2,as.is=T,sep=" ")
+nam<-tcols[,1]
+DATA<-read.impute(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_out_uk_n"), rownames=nam)
 DATA<-DATA[rownames(sample),]
 info<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_out_uk_n_info"),header=T)
 Y<-data.frame(outcome=sample$t1d)
@@ -160,10 +196,13 @@ rownames(covariates)<-rownames(sample)
 message("Removing poorly imputed SNPs.")
 message("Input matrix has ",ncol(DATA)," SNPs.")
 cs <- col.summary(DATA)
-wh <- which(cs[,"MAF"]<0.005 | cs[,"Call.rate"]<0.99 | cs[,"Certain.calls"]<0.75 | abs(cs[,"z.HWE"])>5.45 | is.na(cs[,"z.HWE"]) | info$info<0.8)
+cont<-sample[sample$t1d==0,]
+da<-DATA[rownames(cont),]
+cs1<-col.summary(da)
+wh <- which(cs[,"MAF"]<0.005 | cs[,"Call.rate"]<0.99 | cs[,"Certain.calls"]<0.75 | abs(cs[,"z.HWE"])>20 | is.na(cs1[,"z.HWE"]) | info$info<0.8)
 
 if(length(wh)) {
-  message("Dropping ",length(wh)," SNPs with |z.HWE|>5.45, certain calls <0.75, MAF < 0.005, call rate <0.99 or info score<0.8")
+  message("Dropping ",length(wh)," SNPs with |z.HWE|>20, certain calls <0.75, MAF < 0.005, call rate <0.99 or info score<0.8")
   DATA <- DATA[,-wh]
 }
 DATA<-DATA[,!duplicated(colnames(DATA))]
@@ -203,7 +242,7 @@ DATA<-DATA[,-w]
 #cs$var<-va
 #cs$expvar<-2*cs$MAF*(1-cs$MAF)
 #cs$varrat<-cs$var/cs$expvar
-#w2<-which(cs$varrat<0.98 | cs$varrat>1.02)
+#w2<-which(cs$varrat<0.95 | cs$varrat>1.05)
 #cs<-cs[-w2,]
 #DATA<-DATA[,-w2]
 
