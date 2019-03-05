@@ -4,7 +4,7 @@ Code related to analysis examining whether any variants associated with type 1 d
 
 # Data
 
-The underlying data is sensitive and thus not publically available, though results will be posted on here and paths to underlieing data on the DIL servers will be placed here. 
+The underlying data is sensitive and thus not publically available, though results will be posted on here and to access the underlying data, please get in touch with any member of the DIL (University of Oxford). 
 This repository has been created in an attempt to make it clear exactly how analyses and data processing were carried out.
 
 # Prerequisites
@@ -77,47 +77,5 @@ table_1.R	-> generates Table 1 in manuscript, baseline characteristics
 coloc_ikzf3.R	-> Formally tests for colocalisation between disease and whole blood eQTLs using coloc
 ```
 
-# Data locations of DIL server
-
-If anyone needs to recreate this analysis, hopefully this will be useful to anyone working at the DIL with regards to where the raw data underlying this analysis is saved.
-
-### Immunochip data
-UK case-controls: 
-```
-/fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/t1d-cases-preqc.(bed,bim,fam)
-/fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/uva-controls-preqc.(bed,bim,fam)
-/fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/sanger-controls-preqc.(bed,bim,fam)
-```
-
-T1DGC families:
-```
-/fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/t1dgc-asp-preqc.(bed,bim,fam)
-```
-
-Warren, IDDMGEN, T1DGEN, NI GRID collections:
-```
-/fs3/projects/todd/ipswich/Immunochip/PLINK/distribution/finn-preqc.(bed,bim,fam)
-```
-
-### Age-at-diagnosis data:
-UK cases (GRID):
-```
-/fs3/projects/todd/ipswich/Immunochip/support/casecontrol/t1d-subject-lookup-2015-08-06.csv
-```
-
-T1DGC families:
-```
-/fs3/projects/todd/chiswick/store/t1dgc-datasets/T1DGC.2011.03_Golden_Pedigree/T1DGC.2011.03_Golden_Pedigree/Resources/T1DGC.2011.03_Resources.csv
-```
-
-Warren, IDDMGEN, T1DGEN, NI GRID:
-```
-/fs3/projects/todd/ipswich/shared/researcher-data-requests/jamie-2016-01-21/
-```
-
-### Direct HLA typing data:
-```
-/fs3/projects/todd/chiswick/store/hla/summary-data/cc-hla-2015-11-13.tab
-```
 
 

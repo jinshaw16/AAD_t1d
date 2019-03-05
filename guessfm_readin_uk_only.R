@@ -10,12 +10,13 @@ library(ggplot2)
 library(snpStats)
 library(speedglm)
 library(jimisc)
+library(GenomicRanges)
 
 #define regions:
-hits<-c("imm_17_35158633","imm_15_77022012","imm_9_4281928",
-"imm_1_170941164", "imm_4_123335627", "imm_6_128328079", 
- "imm_1_205006527","imm_16_73809828",
-"imm_10_6170083")
+likelihoods<-read.table(file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_n.txt",
+header=T, sep="\t", as.is=T)
+likelihoods<-likelihoods[likelihoods$p<(0.05/nrow(likelihoods)),]
+hits<-likelihoods$id
 
 #set paths
 mydir <-"/well/todd/users/jinshaw/aad/under_7/guessfm/uk/"
@@ -98,12 +99,12 @@ colnames(DATA)<-ifelse(substr(colnames(DATA),1,1) %in% c("1","2","3","4","5","6"
 paste0("X",colnames(DATA)),colnames(DATA))
 Y<-as.matrix(Y)
 #taking residuals from logistic regression including covriates as outcome... it's an approximation
-#abf <- abf.calc(y=Y,x=DATA,q=covariates,models=best$str,family="binomial", verbose=TRUE, approx.lm=T)
+abf <- abf.calc(y=Y,x=DATA,q=covariates,models=best$str,family="binomial", verbose=TRUE, approx.lm=T)
 
-#sm.all <- abf2snpmod(abf,expected=3, overdispersion = 1.00000001)
-#sp.all <-snp.picker(d=sm.all, data=DATA)
+sm.all <- abf2snpmod(abf,expected=3, overdispersion = 1.00000001)
+sp.all <-snp.picker(d=sm.all, data=DATA)
 
-#save(sm.all,sp.all,file=paste0(mydir,"/smsp_residuals.RData"))
+save(sm.all,sp.all,file=paste0(mydir,"/smsp_residuals.RData"))
 
 load(file=paste0(mydir,"/smsp_residuals.RData"))
 if (length(sp.all@groups)==0){
@@ -116,37 +117,37 @@ if(length(sp.all@groups)!=0){
 groups <- as(sp.all,"groups")
 
 #for GLIS3, i think all should be part of the same group. just checking this here:
-if (snp=="imm_9_4281928"){
-test.groups<-function(tag1, tag2, groups){
-w<-which(groups@tags %in% c(tag1, tag2))
-groups@tags<-groups@tags[w]
-groups@.Data<-list(groups@.Data[[w[1]]], groups@.Data[[w[2]]])
-return(groups)
-}
-test<-test.groups("rs6476842.T", "rs10974438.C", groups)
-check.merge(sm.all, test)
+#if (snp=="imm_9_4281928"){
+#test.groups<-function(tag1, tag2, groups){
+#w<-which(groups@tags %in% c(tag1, tag2))
+#groups@tags<-groups@tags[w]
+#groups@.Data<-list(groups@.Data[[w[1]]], groups@.Data[[w[2]]])
+#return(groups)
+#}
+#test<-test.groups("rs34706136.TG", "rs10814917.G", groups)
+#check.merge(sm.all, test)
 #Looks like they might be the same signal as pp(all)<<pp(any)
-g2<-groups.merge(groups, c("rs6476842.T", "rs10974438.C"))
-groups<-g2
-}
+#g2<-groups.merge(groups, c("rs34706136.TG", "rs10814917.G"))
+#groups<-g2
+#}
 
 
 #load the snp data:
 chromosome<-substr(snp,5,6)
 chromosome<-ifelse(substr(chromosome,2,2)=="_",substr(chromosome,1,1),chromosome)
-#l<-read.table(file=paste0("/well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chromosome,".legend.gz"), header=T)
-#l$rsid<-gsub(":",".",l$id)
-#l$rsid<-ifelse((substr(l$rsid,1,1)==chromosome)|(substr(l$rsid,1,2)==chromosome),
-#paste0("X",l$rsid), l$rsid)
-#l$rsid<-gsub(">",".",l$rsid)
-#l$rsid<-gsub("<",".",l$rsid)
-#results<-l[l$rsid %in% colnames(DATA),]
-#rownames(results)<-results$rsid
-#summx <- guess.summ(sm.all,groups=groups,snps=results,position="position")
-#summx <- scalepos(summx,position="position")
-#summx$tag<-as.factor(summx$tag)
+l<-read.table(file=paste0("/well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chromosome,".legend.gz"), header=T)
+l$rsid<-gsub(":",".",l$id)
+l$rsid<-ifelse((substr(l$rsid,1,1)==chromosome)|(substr(l$rsid,1,2)==chromosome),
+paste0("X",l$rsid), l$rsid)
+l$rsid<-gsub(">",".",l$rsid)
+l$rsid<-gsub("<",".",l$rsid)
+results<-l[l$rsid %in% colnames(DATA),]
+rownames(results)<-results$rsid
+summx <- guess.summ(sm.all,groups=groups,snps=results,position="position")
+summx <- scalepos(summx,position="position")
+summx$tag<-as.factor(summx$tag)
 
-#save(sm.all,sp.all,groups,results,summx, file=paste0(mydir,"summx.RData"))
+save(sm.all,sp.all,groups,results,summx, file=paste0(mydir,"summx.RData"))
 load(file=paste0(mydir,"summx.RData"))
 
 
