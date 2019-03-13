@@ -54,7 +54,7 @@ d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 #read SNP and phenotype data:
 load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 
-p<-t1dsnps[!t1dsnps$id %in% colnames(g),]
+p<-t1dsnps[!t1dsnps$id %in% colnames(all),]
 p$chromosome=sub("(^.*)[_](.*)[_](.*)","\\2",p$id)
 
 samples<-all@samples

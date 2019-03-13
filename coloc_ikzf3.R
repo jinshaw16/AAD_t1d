@@ -3,14 +3,15 @@
 library(stringr)
 library(snpStats)
 library(coloc)
+library(ggplot2)
 #load the disease associations with the <7s:
 
 mydir <-"/well/todd/users/jinshaw/aad/under_7/guessfm/uk/"
 outdir<-"/well/todd/users/jinshaw/output/aad/under_7/guessfm/uk/"
 
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
 pheno<-pheno[(pheno$group==0|pheno$group==1) & !is.na(pheno$group),]
-pheno<-pheno[pheno$country=="UK",]
+
 
 #and the imputed data for this region:
 getdis<-function(snp){
@@ -24,7 +25,7 @@ colnames(DATA)<-ifelse(substr(colnames(DATA),1,1) %in% c("1","2","3","4","5","6"
 paste0("X",colnames(DATA)),colnames(DATA))
 #get the alleles:
 system(paste0("awk -F \' \' \' {print $1,$2,$3,$4,$5}\' /well/todd/users/jinshaw/aad/under_7/imputation/",
-snp,"_out > /well/todd/users/jinshaw/aad/under_7/imputation/",snp,"alleles"))
+snp,"_n_out > /well/todd/users/jinshaw/aad/under_7/imputation/",snp,"alleles"))
 alls<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"alleles"),header=F,as.is=T)
 alls$V2<-gsub(":",".",alls$V2)
 alls$V2<-gsub("<",".",alls$V2)

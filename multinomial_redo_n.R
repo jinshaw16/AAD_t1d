@@ -1,4 +1,4 @@
-#multinomial_redo.R
+#multinomial_redo_n.R
 library(snpStats)
 library(annotSnpStats)
 library(snpStatsWriter)
@@ -57,16 +57,16 @@ t1dsnps$id<-ifelse(substr(t1dsnps$id,1,3)=="seq",gsub("_","-", t1dsnps$id),t1dsn
 t1dsnps$id<-ifelse(substr(t1dsnps$id,1,4)=="X1kg", substr(t1dsnps$id,2,100000),t1dsnps$id)
 t1dsnps$ord<-c(1:nrow(t1dsnps))
 t1dsnps$snp<-as.character(t1dsnps$snp)
-p<-t1dsnps[!t1dsnps$id %in% colnames(all),]
+#p<-t1dsnps[!t1dsnps$id %in% colnames(all),]
 
 
 #keep only the ones we want to test:
-g<-all[,colnames(all) %in% t1dsnps$id]
-g<-as(g,"SnpMatrix")
-cs<-col.summary(g)
-w<-which(cs$RAF>0.5)
-g<-switch.alleles(g,snps=w)
-b<-as(g,"numeric")
+#g<-all[,colnames(all) %in% t1dsnps$id]
+#g<-as(g,"SnpMatrix")
+#cs<-col.summary(g)
+#w<-which(cs$RAF>0.5)
+#g<-switch.alleles(g,snps=w)
+#b<-as(g,"numeric")
 
 #and the imputed ones:
 getsnp<-function(snp){
@@ -79,14 +79,14 @@ colnames(d)<-snp
 b<<-cbind2(b,d)
 return(d)
 }
-l<-lapply(p$id,getsnp)
-colnames(b)<-gsub(":.*","",colnames(b))
-pheno<-all@samples
+#l<-lapply(p$id,getsnp)
+#colnames(b)<-gsub(":.*","",colnames(b))
+#pheno<-all@samples
 
-table(rownames(b)==rownames(pheno))
-pheno<-cbind(pheno,b)
-p1<-pheno
-save(b,pheno,t1dsnps, file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
+#table(rownames(b)==rownames(pheno))
+#pheno<-cbind(pheno,b)
+#p1<-pheno
+#save(b,pheno,t1dsnps, file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
 
 load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
 t1dsnps$altid<-ifelse(substr(t1dsnps$id,1,1)=="1",paste0("X",t1dsnps$id),t1dsnps$id)

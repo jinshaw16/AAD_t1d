@@ -10,11 +10,12 @@ library(ggplot2)
 args=commandArgs(trailingOnly=TRUE)
 d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 #read SNP and phenotype data:
-#load(file=paste0(d,"all_inds_unrel_postqc.RData"))
+load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 
 #uk<-all@samples
 #uk<-uk[uk$country %in% c("UK","NI"),]
 #all<-all[rownames(all) %in% rownames(uk),]
+#all<-all[!is.na(all@samples$onset) | all@samples$affected==1,]
 #samples<-all@samples
 #snps<-all@snps
 #write.plink(file.base="/well/todd/users/jinshaw/aad/geno_unrel_uk_n",
@@ -36,7 +37,8 @@ d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 #" --make-bed --out /well/todd/users/jinshaw/aad/under_7/forpcad_uk_n"))
 #system(paste0("~/software/plink2 --bfile /well/todd/users/jinshaw/aad/under_7/forpcad_uk_n ",
 #"--exclude range /well/todd/users/jinshaw/aad/under_7/mhc.txt --make-bed --out /well/todd/users/jinshaw/aad/under_7/forpcad_uk_nomhc_n"))
-#system(paste0("plink --bfile /well/todd/users/jinshaw/aad/under_7/forpcad_uk_nomhc_n --pca --allow-no-sex --out /well/todd/users/jinshaw/aad/under_7/pcad_uk_n"))
+#system(paste0("~/software/plink2 --bfile /well/todd/users/jinshaw/aad/under_7/forpcad_uk_nomhc_n --pca approx 10 ",
+#"--allow-no-sex --out /well/todd/users/jinshaw/aad/under_7/pcad_uk_n"))
 
 
 #read this genotype data in and the pcas (only SNPs we're interested in), then keep only the hits we're interested in:
@@ -59,7 +61,8 @@ d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 
 #pheno$group<-ifelse(pheno$affected==1,0,
 #ifelse(pheno$onset<7 & !is.na(pheno$onset),1,
-#ifelse(pheno$onset>=13 & !is.na(pheno$onset),2,NA)))
+#ifelse(pheno$onset>=7 & pheno$onset<13 & !is.na(pheno$onset),2,
+#ifelse(pheno$onset>=13 & !is.na(pheno$onset),3,NA))))
 
 #save(pheno,t1dsnps,file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
 

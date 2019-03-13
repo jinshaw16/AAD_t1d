@@ -50,11 +50,11 @@ load(file=paste0("/well/todd/users/jinshaw/aad/under_7/split_in_half_",args,"_n.
 #now perform multinomial regression (remove 7-13s):
 domult<-function(pheno,half){
 p<-pheno
-pheno<-pheno[pheno$group %in% c(0,1,3) & !is.na(pheno$group),]
+
 pheno$g0<-ifelse(pheno$group==0,1,ifelse(pheno$group!=0,0,NA))
 pheno$g1<-ifelse(pheno$group==1,1,ifelse(pheno$group!=1,0,NA))
-pheno$g2<-ifelse(pheno$group==3,1,ifelse(pheno$group!=3,0,NA))
-
+pheno$g2<-ifelse(pheno$group==2,1,ifelse(pheno$group!=2,0,NA))
+pheno$g3<-ifelse(pheno$group==3,1,ifelse(pheno$group!=3,0,NA))
 t1dsnps$altid<-ifelse(substr(t1dsnps$id,1,1)=="1",paste0("X",t1dsnps$id),t1dsnps$id)
 colnames(pheno)<-ifelse(substr(colnames(pheno),1,1)=="1",paste0("X",colnames(pheno)),colnames(pheno))
 t1dsnps$altid<-ifelse(!t1dsnps$altid %in% colnames(pheno),t1dsnps$snp,t1dsnps$altid)
@@ -66,11 +66,13 @@ getlikelihoods<-function(snpname){
 form0<-as.formula(paste0("g0 ~ 0"))
 form1<-as.formula(paste0("g1 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + `",snpname,"`"))
 form2<-as.formula(paste0("g2 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + `",snpname,"`"))
+form3<-as.formula(paste0("g3 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + `",snpname,"`"))
+
 
 if(snpname %in% c("imm_2_162845188","seq-rs35667974")){
 pheno[,snpname]<-ifelse(pheno[,snpname]==2,0,ifelse(pheno[,snpname]==0,2,pheno[,snpname]))
 }
-one <- tryCatch(multinomRob(model=list(form0,form1,form2),data=pheno, print.level=1, MLEonly=T), error=function(err) NA)
+one <- tryCatch(multinomRob(model=list(form0,form1,form2, form3),data=pheno, print.level=1, MLEonly=T), error=function(err) NA)
 if(is.na(one)){
 l<-data.frame(unconstrained=NA, constrained=NA, logor1=NA, logse1=NA,
 logor2=NA, logse2=NA)
@@ -79,9 +81,9 @@ if(!is.na(one)){
 llk1<-one$value
 
 equals0<-as.formula(paste0("g1 ~ `",snpname,"` + 0"))
-equals1<-as.formula(paste0("g2 ~ `",snpname,"` + 0"))
+equals1<-as.formula(paste0("g3 ~ `",snpname,"` + 0"))
 #model 2: constrain betas to equal each other:
-two<-multinomRob(model=list(form0,form1,form2),
+two<-multinomRob(model=list(form0,form1,form2, form3),
 equality=list(list(equals0,equals1)), data=pheno, print.level=1, MLEonly=T)
 llk2<-two$value
 l<-data.frame(unconstrained=llk1, constrained=llk2, logor1=one$coefficients[12,2], logse1=one$se[12,2],

@@ -86,7 +86,7 @@ i<-as.numeric(args[1])
 
     res=predict[[4]]
 
-write.table(res,file=paste0(outFile,i),quote=F,row.names=T,col.names=T,append=T)
+write.table(res,file=paste0(outFile,i),quote=F,row.names=T,col.names=T)
 
 
 

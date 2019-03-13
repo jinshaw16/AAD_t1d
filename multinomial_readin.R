@@ -1,6 +1,8 @@
 #multinomial_readin.R
 library(ggplot2)
 library(gridExtra)
+library(snpStats)
+library(annotSnpStats)
 
 load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
 t1dsnps$altid<-ifelse(substr(t1dsnps$id,1,1)=="1",paste0("X",t1dsnps$id),t1dsnps$id)
@@ -90,6 +92,12 @@ width=40, height=30, units="cm")
 grid.arrange(one,two,ncol=2)
 dev.off()
 
+#of those not FDR associateed, how many have strongest signal in the <7s, middle in the 7-13s and weakest in >13s?
+not<-r[r$pfdr>0.1,]
+not$hit<-ifelse((not$logor1<not$logor2 & not$logor2 < not$logor3 & abs(not$logor1)>abs(not$logor3)) |
+(not$logor1 > not$logor2 & not$logor2 > not$logor3 & abs(not$logor1)>abs(not$logor3)),1,0)
+t<-table(not$hit)
+pbinom(q=t[2],size=(t[1]+t[2]), p=1/6,lower.tail=F)
 
 ########################
 #NOW FOR THE MAFS PLOTS#

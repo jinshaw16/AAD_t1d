@@ -24,6 +24,8 @@ pheno$g0<-ifelse(pheno$group==0,1,ifelse(pheno$group!=0,0,NA))
 pheno$g1<-ifelse(pheno$group==1,1,ifelse(pheno$group!=1,0,NA))
 pheno$g2<-ifelse(pheno$group==2,1,ifelse(pheno$group!=2,0,NA))
 pheno$g3<-ifelse(pheno$group==3,1,ifelse(pheno$group!=3,0,NA))
+pheno$`seq-rs35667974`<-ifelse(pheno$`seq-rs35667974`==2,0,
+ifelse(pheno$`seq-rs35667974`==0,2,pheno$`seq-rs35667974`))
 
 #carry out the multinomial regressions:
 getlikelihoods<-function(snpname){
@@ -44,6 +46,11 @@ llk2<-two$value
 l<-data.frame(unconstrained=llk1, constrained=llk2, logor1=one$coefficients[nrow(one$coefficients),2], logse1=one$se[nrow(one$coefficients),2],
 logor2=one$coefficients[nrow(one$coefficients),3], logse2=one$se[nrow(one$coefficients),3],
 logor3=one$coefficients[nrow(one$coefficients),4],logse3=one$se[nrow(one$coefficients),4])
+if (snpname %in% c("seq-rs35667974")){
+l$logor1<-l$logor1*-1
+l$logor2<-l$logor2*-1
+l$logor3<-l$logor3*-1
+}
 l$lb1<-l$logor1-(qnorm(0.975)*l$logse1)
 l$lb2<-l$logor2-(qnorm(0.975)*l$logse2)
 l$lb3<-l$logor3-(qnorm(0.975)*l$logse3)
@@ -136,6 +143,5 @@ grid.arrange(one,two,ncol=2)
 dev.off()
 }
 
-
-domultiall(6)
+#domultiall(6)
 domultiall(5)
