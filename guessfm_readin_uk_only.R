@@ -117,19 +117,19 @@ if(length(sp.all@groups)!=0){
 groups <- as(sp.all,"groups")
 
 #for GLIS3, i think all should be part of the same group. just checking this here:
-#if (snp=="imm_9_4281928"){
-#test.groups<-function(tag1, tag2, groups){
-#w<-which(groups@tags %in% c(tag1, tag2))
-#groups@tags<-groups@tags[w]
-#groups@.Data<-list(groups@.Data[[w[1]]], groups@.Data[[w[2]]])
-#return(groups)
-#}
-#test<-test.groups("rs34706136.TG", "rs10814917.G", groups)
-#check.merge(sm.all, test)
+if (snp=="imm_9_4280823"){
+test.groups<-function(tag1, tag2, groups){
+w<-which(groups@tags %in% c(tag1, tag2))
+groups@tags<-groups@tags[w]
+groups@.Data<-list(groups@.Data[[w[1]]], groups@.Data[[w[2]]])
+return(groups)
+}
+test<-test.groups(groups@tags[1], groups@tags[2], groups)
+check.merge(sm.all, test)
 #Looks like they might be the same signal as pp(all)<<pp(any)
-#g2<-groups.merge(groups, c("rs34706136.TG", "rs10814917.G"))
-#groups<-g2
-#}
+g2<-groups.merge(groups, c(groups@tags[1], groups@tags[2]))
+groups<-g2
+}
 
 
 #load the snp data:
@@ -155,6 +155,7 @@ pat<-pattern.plot(sm.all,groups)
 ggsave(pat,file=paste0(outdir,snp,"/cum_prob_plot.png"),
 dpi=200, height=20, width=20, units="cm")
 le<-length(unique(summx$tag))
+summx$tag<-reorder(summx$tag,-summx$ppsum)
 hues = c("red","blue","green","yellow","turquoise1","orange","purple","slategrey1","tan","pink","lightblue")
 hues =hues[1:le]
 #seq(from=10, to=(10+((le-1)*22)), by=22)
@@ -187,6 +188,9 @@ g<-GRanges(seqnames=c(paste0("chr",chromosome)),
 ranges=IRanges(min(summx$position),end=max(summx$position)))
 o1<-subsetByOverlaps(genes,g)
 o1<-as.data.frame(o1)
+if (snp=="imm_17_35306733"){
+o1<-o1[o1$gene %in% c("IKZF3", "ORMDL3", "GSDMB"),]
+}
 if(nrow(o1)>0){
 m<-(0.2*nrow(o1))
 o1$y=c(seq(0.2,m,0.2))
@@ -248,8 +252,8 @@ dpi=200, height=30, width=20, units="cm")
 
 e1$logzscore<-ifelse(e1$Zscore>0,log10(e1$Zscore),
 ifelse(e1$Zscore<=0, log10(-e1$Zscore)*-1,NA))
-if(snp %in% c("imm_17_35158633","imm_16_73809828")){
-e1<-e1[e1$Pvalue<5*10^-100,]
+if(snp %in% c("imm_17_35306733","imm_16_73809828")){
+e1<-e1[e1$Pvalue<5*10^-150,]
 }
 if(snp %in% c("imm_1_170941164","imm_15_77022012","imm_1_205006527")){
 e1<-e1[e1$Pvalue<5*10^-50,]
@@ -257,7 +261,7 @@ e1<-e1[e1$Pvalue<5*10^-50,]
 if(snp %in% c("imm_10_6170083")){
 e1<-e1[e1$Pvalue<5*10^-25,]
 }
-if(snp %in% c("imm_9_4281928","imm_4_123335627","imm_6_128328079","imm_14_97557760")){
+if(snp %in% c("imm_9_4280823","imm_4_123335627","imm_6_128328079","imm_14_97557760")){
 e1<-e1[e1$Pvalue<5*10^-8,]
 }
 summx$SNPPos<-summx$position
@@ -273,6 +277,7 @@ direction$lb<-direction$beta-(qnorm(0.975)*direction$se)
 direction$ub<-direction$beta+(qnorm(0.975)*direction$se)
 direction<-merge(summx,direction,by="snp",all.x=T)
 #export for the paper supplementary:
+direction<-direction[direction$ppsum>0.9,]
 ds<-direction[,c("snp","position","beta","ref","effect","pp","ppsum")]
 ds$snp<-ifelse(substr(ds$snp,1,2)=="rs",gsub("\\..*","",ds$snp),ds$snp)
 ds$ppsum<-round(ds$ppsum,digits=4)
@@ -304,11 +309,11 @@ scale_shape_discrete(name="Gene") +
 theme(legend.position = c(0.5, 0.5)) + 
 scale_colour_manual(name="Tag group",values = c(hues1))
 
-if (snp!="imm_9_4281928"){
+if (snp!="imm_9_4280823"){
 out2<-tracks(trying1, t, chr, signals,lds,heights=c(2,1,1,2,1))
 }
 
-if (snp=="imm_9_4281928"){
+if (snp=="imm_9_4280823"){
 out2<-tracks(trying1, t, chr, signals,lds,heights=c(2,1,1,2,1), xlim=c(4280000,max(e1$SNPPos)))
 }
 
@@ -323,6 +328,7 @@ direction$lb<-direction$beta-(qnorm(0.975)*direction$se)
 direction$ub<-direction$beta+(qnorm(0.975)*direction$se)
 
 direction<-merge(direction,summx,by="snp",all.x=T)
+direction<-direction[direction$ppsum>0.9,]
 direct<-ggplot(data=direction, aes(position, beta,colour=as.factor(tag))) + geom_point() +
 geom_errorbar(data=direction, aes(ymin=lb, ymax=ub, x=position,colour=as.factor(tag))) +
 scale_y_continuous(name="log-odds ratio (<7)") + 
@@ -383,34 +389,34 @@ axis.text.y=element_blank(),
 axis.ticks.y=element_blank()) +
 scale_colour_manual(name="Tag group",values=c(hues))
 
-if(snp!="imm_9_4281928"){
+if(snp!="imm_9_4280823"){
 out4<-tracks(t1,direct1,trying2, xlab=paste0("Position along chromosome ",chromosome),heights=c(1,1,3), xlim=c(min(o1$start,o1$end,min(e1$SNPPos)), max(e1$SNPPos)))
 ggsave(out4,file=paste0(outdir,snp,"/new_eqtls_directions.png"),
 dpi=800, height=20, width=15, units="cm")
 }
-if(snp=="imm_9_4281928"){
+if(snp=="imm_9_4280823"){
 out4<-tracks(t1,direct1,trying2, xlab=paste0("Position along chromosome ",chromosome),heights=c(1,1,3), xlim=c(4150000, max(e1$SNPPos)))
 ggsave(out4,file=paste0(outdir,snp,"/new_eqtls_directions.png"),
 dpi=800, height=20, width=15, units="cm")
 }
 
-if(snp!="imm_9_4281928"){
+if(snp!="imm_9_4280823"){
 out3<-tracks(direct, trying1,t,chr,signals,lds,heights=c(1,2,1,1,2,1),xlim=c(min(o1$start,o1$end), max(e1$SNPPos)))
 ggsave(out3,file=paste0(outdir,snp,"/init_out_genes_eqtls_directions.png"),
 dpi=200, height=40, width=20, units="cm")
 }
-if(snp=="imm_9_4281928"){
+if(snp=="imm_9_4280823"){
 out3<-tracks(direct, trying1,t,chr,signals,lds,heights=c(1,2,1,1,2,1),xlim=c(4150000, max(e1$SNPPos)))
 ggsave(out3,file=paste0(outdir,snp,"/init_out_genes_eqtls_directions.png"),
 dpi=200, height=40, width=20, units="cm")
 }
 
-if(snp!="imm_9_4281928"){
+if(snp!="imm_9_4280823"){
 out5<-tracks(t1,direct3,trying3, xlab=paste0("Position along chromosome ",chromosome),heights=c(1,1,3), xlim=c(min(o1$start,o1$end,min(e1$SNPPos)), max(e1$SNPPos)))
 ggsave(out5,file=paste0(outdir,snp,"/new_eqtls_directions_tony.png"),
 dpi=800, height=20, width=15, units="cm")
 }
-if(snp=="imm_9_4281928"){
+if(snp=="imm_9_4280823"){
 out5<-tracks(t1,direct3,trying3, xlab=paste0("Position along chromosome ",chromosome),heights=c(1,1,3), xlim=c(4150000, max(e1$SNPPos)))
 ggsave(out5,file=paste0(outdir,snp,"/new_eqtls_directions_tony.png"),
 dpi=800, height=20, width=15, units="cm")
@@ -418,7 +424,7 @@ dpi=800, height=20, width=15, units="cm")
 }
 }
 
-lapply(hits[1:2], readitallin)
+lapply(hits, readitallin)
 
 
 

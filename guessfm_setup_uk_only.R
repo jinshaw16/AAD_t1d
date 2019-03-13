@@ -9,6 +9,7 @@ library(ggbio)
 library(snpStats)
 library(jimisc)
 library(annotSnpStats)
+library(snpStatsWriter)
 
 #want to run GUESSFM on each region.
 #define regions (those passing Bonferroni correction in primary analysis):
@@ -110,8 +111,8 @@ system(paste0("qsub ~/programs/aad/under_7/imputation/",snp,"_n"))
 return(p)
 }
 
-loadeddate<-lapply(hits, imputethem)
-save(loadeddate,file="/well/todd/users/jinshaw/aad/under_7/imputation/bonferonni_imp.RData")
+#loadeddate<-lapply(hits, imputethem)
+#save(loadeddate,file="/well/todd/users/jinshaw/aad/under_7/imputation/bonferonni_imp.RData")
 
 #load imp
 load(file="/well/todd/users/jinshaw/aad/under_7/imputation/bonferonni_imp.RData")
@@ -141,12 +142,12 @@ s1<-rbind(s2,s3)
 s1<-s1[tcols,]
 
 #generate SNPTEST sample file:
-headit<-data.frame(ID_1=0,ID_2=0,missing=0,t1d="B",PC1="C",PC2="C",PC3="C",PC4="C",PC5="C",PC6="C",PC7="C",PC8="C",PC9="C",PC10="C")
+headit<-data.frame(ID_1=0,ID_2=0,missing=0,t1d="B",PC1="C",PC2="C",PC3="C",PC4="C",PC5="C")
 s1$ID_1=s1$uniqueID
 s1$ID_2=s1$uniqueID
 s1$missing<-0
 s1$t1d<-ifelse(s1$affected==2,1,ifelse(s1$affected==1,0,NA))
-s1<-s1[,c("ID_1","ID_2","missing","t1d","PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10")]
+s1<-s1[,c("ID_1","ID_2","missing","t1d","PC1","PC2","PC3","PC4","PC5")]
 for (vars in colnames(s1)){
 s1[,vars]<-as.character(s1[,vars])
 }
@@ -155,7 +156,7 @@ write.table(s1,file="/well/todd/users/jinshaw/aad/under_7/imputation/geno.sample
 dosnptest<-function(snp){
 sink(file=paste0("~/programs/aad/under_7/snptest_scripts/",snp,"_uk.sh"))
 cat(paste0("qctool -g /well/todd/users/jinshaw/aad/under_7/imputation/",snp,
-"_out -s /well/todd/users/jinshaw/aad/under_7/imputation/geno.sample -filetype gen -incl-samples ",
+"_n_out -s /well/todd/users/jinshaw/aad/under_7/imputation/geno.sample -filetype gen -incl-samples ",
 "/well/todd/users/jinshaw/aad/under_7/imputation/uk -os /well/todd/users/jinshaw/aad/under_7/imputation/uk.sample_",snp,
 " -og /well/todd/users/jinshaw/aad/under_7/imputation/uk_out_",snp," -ofiletype gen\n"))
 
@@ -168,7 +169,7 @@ jobname=paste0(snp,"_uk"),projectletter="c", qletter="c", qlength="short")
 system(paste0("chmod a=rwx ~/programs/aad/under_7/snptest_scripts/",snp,"_uk.sh"))
 system(paste0("qsub ~/programs/aad/under_7/snptest_scripts/",snp,"_uk"))
 }
-lapply(hits, dosnptest)
+#lapply(hits, dosnptest)
 
 
 
@@ -199,10 +200,10 @@ cs <- col.summary(DATA)
 cont<-sample[sample$t1d==0,]
 da<-DATA[rownames(cont),]
 cs1<-col.summary(da)
-wh <- which(cs[,"MAF"]<0.005 | cs[,"Call.rate"]<0.99 | cs[,"Certain.calls"]<0.75 | abs(cs[,"z.HWE"])>20 | is.na(cs1[,"z.HWE"]) | info$info<0.8)
+wh <- which(cs[,"MAF"]<0.005 | cs[,"Call.rate"]<0.99 | cs[,"Certain.calls"]<0.75 | abs(cs1[,"z.HWE"])>8 | is.na(cs1[,"z.HWE"]) | info$info<0.8)
 
 if(length(wh)) {
-  message("Dropping ",length(wh)," SNPs with |z.HWE|>20, certain calls <0.75, MAF < 0.005, call rate <0.99 or info score<0.8")
+  message("Dropping ",length(wh)," SNPs with |z.HWE|>8, certain calls <0.75, MAF < 0.005, call rate <0.99 or info score<0.8")
   DATA <- DATA[,-wh]
 }
 DATA<-DATA[,!duplicated(colnames(DATA))]
@@ -214,7 +215,7 @@ rownames(cs)<-cs$rs_id
 cs<-cs[colnames(DATA),]
 cs$diff<-abs(cs$RAF-cs$exp_freq_a1)
 cs<-cs[cs$diff<0.05,]
-wh1<-which(cs$type==2 & cs$r2_type0<0.8)
+wh1<-which(cs$type==2 & cs$concord_type0<0.8)
 cs<-cs[-wh1,]
 DATA<-DATA[,colnames(DATA) %in% rownames(cs)]
 cs<-cs[cs$rs_id %in% colnames(DATA),]
@@ -237,14 +238,14 @@ DATA<-DATA[rownames(sample),]
 DATA<-DATA[,-w]
 
 #finally comparing variances manually and dropping those where the expected variance is different (higher or lower) than the imputed:
-#h<-as(DATA,"numeric")
-#va<-apply(h,2,var)
-#cs$var<-va
-#cs$expvar<-2*cs$MAF*(1-cs$MAF)
-#cs$varrat<-cs$var/cs$expvar
-#w2<-which(cs$varrat<0.95 | cs$varrat>1.05)
-#cs<-cs[-w2,]
-#DATA<-DATA[,-w2]
+h<-as(DATA,"numeric")
+va<-apply(h,2,var)
+cs$var<-va
+cs$expvar<-2*cs$MAF*(1-cs$MAF)
+cs$varrat<-cs$var/cs$expvar
+w2<-which(cs$varrat<0.95 | cs$varrat>1.05)
+cs<-cs[-w2,]
+DATA<-DATA[,-w2]
 
 #Run bayesian variable selection via GUESS
 mydir <-"/well/todd/users/jinshaw/aad/under_7/guessfm/uk/"
