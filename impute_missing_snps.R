@@ -52,15 +52,16 @@ d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 
 hits<-t1dsnps[!t1dsnps$id %in% colnames(all),"id"]
-h<-read.table(file="/well/todd/users/jinshaw/t1d_risk/immunochip/ic-sanger-b58c.bim",header=F, as.is=T)
-colnames(h)<-c("chromosome","snp.name","cM","position","allele.1","allele.2")
+h<-all@snps
 r<-all
+h1<-read.table(file=paste0(d,"ic-sanger-b58c.bim"),header=F, as.is=T)
+colnames(h1)<-c("chromosome", "snp.name", "cM", "position", "allele.1", "allele.2")
 
 #Readin the PLINK file of all the individuals and define a 0.5MB region around the lead SNP for imputation:
 imputethem<-function(snp){
-h1<-h[h$snp.name==snp,]
-chr<-h1$chromosome
-pos<-h1$position
+h2<-h1[h1$snp.name==snp,]
+chr<-h2$chromosome
+pos<-h2$position
 min<-pos-250000
 max<-pos+250000
 reg<-h[h$chromosome==chr & h$position>min & h$position<max,]
@@ -120,6 +121,7 @@ a2=b$allele.2,
 bp=b$position)
 min<-min(b$position)
 max<-max(b$position)
+
 #now write a script to run this through impute2:
 sink(file=paste0("~/programs/aad/under_7/imputation/",snp,"_n"))
 cat(paste0("#!/bin/bash
