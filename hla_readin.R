@@ -11,7 +11,7 @@ aaddir<-"/well/todd/users/jinshaw/aad/"
 
 #read imputation results into R:
 read<-function(num,gene){
-A<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/HIBAG_new_redo_n",num),header=T, as.is=T)
+A<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/HIBAG_new_redo_2",num),header=T, as.is=T)
 colnames(A)[2:5]<-c(paste0(gene,"1"),paste0(gene,"2"),paste0(gene,"prob"),paste0(gene,"matching"))
 return(A)
 }
