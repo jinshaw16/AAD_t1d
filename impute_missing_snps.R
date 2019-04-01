@@ -108,8 +108,13 @@ reg$position<-reg$position37
 reg<-cbind(reg,cs)
 b<-merge(reg,t,by="position")
 b$diff<-abs(b$RAF-b$EUR)
-message(paste0("removing ",nrow(b[b$diff>0.05,]),"/",nrow(b)," SNPs due to strand ambiguity"))
-b<-b[b$diff<0.05,]
+b$amb<-ifelse((b$allele.1=="A" & b$allele.2=="T") |
+(b$allele.1=="T" & b$allele.2=="A") |
+(b$allele.1=="G" & b$allele.2=="C") |
+(b$allele.1=="C" & b$allele.2=="G"),1,0)
+b$dodgy<-ifelse(b$MAF>0.45 & b$amb==1,1,0)
+message(paste0("removing ",nrow(b[b$diff>0.05 | b$dodgy==1,]),"/",nrow(b)," SNPs due to strand ambiguity"))
+b<-b[b$diff<0.05 & b$dodgy==0,]
 rownames(b)<-b$snp.name
 p<-p[,p@snps$snp.name %in% b$snp.name]
 b<-b[colnames(p),]
