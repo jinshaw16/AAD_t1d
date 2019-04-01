@@ -5,16 +5,25 @@ library(annotSnpStats)
 library(ggplot2)
 
 d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
+j<-read.table(file=paste0(d,"sanger-controls-preqc.bim"),header=F,as.is=T)
+j<-j[j$V5!=0 & j$V6!=0,]
 
 #READ IN EACH GENOTYPE DATASET:
 readingeno<-function(base, name){
 g<-read.plink(fam=paste0(d, base,".fam"),
                  bed=paste0(d, base,".bed"),
                  bim=paste0(d, base,".bim"))
- 
+
  
 #create annotated SNP matrix
 g <- annot.plink(g)
+g<-g[,j$V2]
+s<-g@snps
+w<-which(s$allele.1!=j$V5 & !is.na(s$allele.1))
+g<-switch.alleles(g,snps=w)
+s<-g@snps
+s<-s[!is.na(s$allele.1),]
+g<-g[,rownames(s)]
 g@samples$member[ is.na(g@samples$member) ] <- 3
 rownames(g) <- paste(g@samples$pedigree, g@samples$member, sep=".")
  
@@ -24,8 +33,23 @@ return(g)
  
 m<-mapply(readingeno,base=c("t1d-cases-preqc","finn-preqc", "t1dgc-asp-preqc", "sanger-controls-preqc","uva-controls-preqc"),
 name=c("uk","finn", "t1dgc","sanger","uva"), SIMPLIFY=FALSE)
- 
+
 names(m)<-c("uk","finn", "t1dgc","sanger","uva")
+
+s1<-m[[1]]@snps
+s2<-m[[2]]@snps
+s3<-m[[3]]@snps
+s4<-m[[4]]@snps
+s5<-m[[5]]@snps
+
+uksnps<-intersect(s1$snp.name,s2$snp.name)
+uksnps<-intersect(uksnps,s4$snp.name)
+uksnps<-intersect(uksnps,s5$snp.name)
+
+m[["uk"]]<-m[["uk"]][,uksnps]
+m[["sanger"]]<-m[["sanger"]][,uksnps]
+m[["uva"]]<-m[["uva"]][,uksnps]
+m[["finn"]]<-m[["finn"]][,uksnps]
 
 ##########################################################################
 #combining ancestry groups and obtaining the AAD data etc for each group:#
@@ -55,9 +79,10 @@ ukall<-rbind(ni,war)
 
 othuk<-m[["finn"]][rownames(m[["finn"]]) %in% ukall$uniqueID,]
 othuk<-othuk[,colnames(uk)]
+
 uk<-rbind2(uk,othuk)
 
-#merge in the other indo into the sample slot:
+#merge in the other info into the sample slot:
 uk_ids<-read.table(file=paste0(d, "/ic-t1d-cases-2015-08-06.tab"), header=TRUE, comment.char="")
 rownames(uk_ids)<-paste0(uk_ids$X.collection, ".", uk_ids$X.sampleid)
 uk_ages<-read.table(file=paste0(d,"/t1d-subject-lookup-2015-08-06.csv"), header=TRUE, sep="\t",comment.char = "")
@@ -234,13 +259,13 @@ allele.2=gen@snps$allele.2)
 #B) Per-marker QC#
 ##################
 #Doing this in PLINK:
-system(paste0("plink --bfile ",d,name,"_post_sampqc --maf 0.005 --geno 0.95 --hwe 0.00005 --make-bed --out ",d,name,"_post_qc"))
+system(paste0("plink --bfile ",d,name,"_post_sampqc --keep-allele-order --maf 0.005 --geno 0.95 --hwe 0.00005 --make-bed --out ",d,name,"_post_qc"))
 message(paste0("Done ",name))
 }
 
-qcit(name="uk", xhomlim=0.93, hetmin=0.18,hetmax=0.24)
-qcit(name="t1dgc", xhomlim=0.93, hetmin=0.18,hetmax=0.24)
-qcit(name="finns", xhomlim=0.93, hetmin=0.18,hetmax=0.24)
+qcit(name="uk", xhomlim=0.93, hetmin=0.2,hetmax=0.3)
+qcit(name="t1dgc", xhomlim=0.93, hetmin=0.18,hetmax=0.3)
+qcit(name="finns", xhomlim=0.93, hetmin=0.2,hetmax=0.3)
 
 #############################
 #REMOVE RELATED INDIVIDUALS:#
@@ -258,11 +283,11 @@ cat(paste0("~/software/plink2 --bfile ",d,cohort,"_post_qc",
 cat(paste0("plink --bfile ",aaddir,cohort,"_post_qc_nomhc",
 " --indep-pairwise 1000 50 0.2 --out ",aaddir,cohort,"_p\n"))
 cat(paste0("plink --bfile ",aaddir,cohort,"_post_qc_nomhc",
-" --exclude ",aaddir,cohort,"_p.prune.out --make-bed --out ",aaddir,"/geno_",cohort,"_n\n"))
+" --exclude ",aaddir,cohort,"_p.prune.out --keep-allele-order --make-bed --out ",aaddir,"/geno_",cohort,"_n\n"))
 
 #remove relateds:
 cat(paste0("~/software/king -b ",aaddir,"/geno_",cohort,"_n.bed --unrelated --prefix ",aaddir,"qc/",cohort,"_n\n"))
-cat(paste0("plink --bfile ",d,cohort,"_post_qc --keep ",aaddir,"qc/",cohort,
+cat(paste0("plink --bfile ",d,cohort,"_post_qc --keep-allele-order --keep ",aaddir,"qc/",cohort,
 "_nunrelated.txt --make-bed --out ",aaddir,"geno_unrel_",cohort,"_n\n"))
 sink()
 system(paste0("chmod a=rwx ~/programs/aad/under_7/relatescripts/relatednesscalc_",cohort,"_nomhc.sh"))
@@ -295,8 +320,18 @@ return(g)
 }
 alls<-lapply(c("uk","t1dgc","finns"),filter)
 
+alls[[2]]<-alls[[2]][,colnames(alls[[1]])]
+alls[[3]]<-alls[[3]][,colnames(alls[[1]])]
+
+s1<-alls[[1]]@snps
+s2<-alls[[2]]@snps
+s3<-alls[[3]]@snps
+w<-which(s2$allele.1!=s1$allele.1)
+w1<-which(s3$allele.1!=s1$allele.1)
+alls[[2]]<-switch.alleles(alls[[2]],snps=w)
+alls[[3]]<-switch.alleles(alls[[3]], snps=w)
+
 all<-rbind2(alls[[1]],alls[[2]])
-alls[[3]]<-alls[[3]][,colnames(all)]
 all<-rbind2(all,alls[[3]])
 
 
@@ -329,7 +364,7 @@ cat(paste0("#$ -N pcs
 #$ -q short.qc\n"))
 cat(paste0("/apps/well/plink/1.90b3/plink --bfile ",aaddir,"all_ages_n --indep-pairwise 1000 50 0.2 --out ",aaddir,"pruned\n"))
 cat(paste0("/apps/well/plink/1.90b3/plink --bfile ",aaddir,"all_ages_n --exclude ",aaddir,"pruned.prune.out",
-" --make-bed --out ",aaddir,"forpcad_n\n"))
+" --make-bed --keep-allele-order --out ",aaddir,"forpcad_n\n"))
 cat(paste0("~/software/plink2 --bfile ",aaddir,"forpcad_n ",
 "--exclude range /well/todd/users/jinshaw/aad/under_7/mhc.txt --make-bed --out ",aaddir,"forpcad_nomhc_n\n"))
 #calculate principal components
