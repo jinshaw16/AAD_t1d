@@ -32,11 +32,11 @@ j$sample.id<-gsub("ni-","ni.",j$sample.id)
 j$sample.id<-gsub("finn-","finn.",j$sample.id)
 j$sample.id<-ifelse(substr(j$sample.id,1,1) %in% c("1","2","4","5"),
 gsub("-",".",j$sample.id),j$sample.id)
-j$fins1<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\1",j$sample.id),j$sample.id)
-j$fins2<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\2",j$sample.id),j$sample.id)
-j$fins3<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\3",j$sample.id),j$sample.id)
-j$fins4<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\4",j$sample.id),j$sample.id)
-j$sample.id<-ifelse(substr(j$sample.id,1,3)=="FIN",paste0(j$fins1,j$fins2,".",j$fins4),j$sample.id)
+#j$fins1<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\1",j$sample.id),j$sample.id)
+#j$fins2<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\2",j$sample.id),j$sample.id)
+#j$fins3<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\3",j$sample.id),j$sample.id)
+#j$fins4<-ifelse(substr(j$sample.id,1,3) %in% c("FIN"),sub("(^FIN-.*)(.*)(-)(.*)","\\4",j$sample.id),j$sample.id)
+#j$sample.id<-ifelse(substr(j$sample.id,1,3)=="FIN",paste0(j$fins1,j$fins2,".",j$fins4),j$sample.id)
 
 j<-j[j$sample.id %in% pheno$uniqueID,]
 pheno<-pheno[j$sample.id,]
@@ -353,4 +353,4 @@ hla$b1801_1<-hla$b1801
 hla$b3906_1<-hla$b3906
 hla$b4403_1<-hla$b4403
 
-save(hla, file="/well/todd/users/jinshaw/aad/under_7/hla_all_n.RData")
+save(hla, file="/well/todd/users/jinshaw/aad/under_7/hla_all_2.RData")
