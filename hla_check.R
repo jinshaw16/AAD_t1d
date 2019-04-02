@@ -43,7 +43,7 @@ ts<-do.call("rbind",ts)
 
 p<-ts[!is.na(ts$match),]
 t1<-table(p$locus)
-png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo/concordance_4digits_n.png",
+png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo_1/concordance_4digits_n.png",
 height=20,width=20, units="cm", res=400)
 ggplot(data=ts[!is.na(ts$match),], aes(as.factor(locus), fill=as.factor(match))) + geom_bar(position="fill",na.rm =TRUE) +
 scale_fill_hue(name="HLA 4 digit\n concordance", breaks=c(0,1),labels=c("FALSE","TRUE")) +
@@ -60,7 +60,7 @@ ts<-do.call("rbind",ts)
 
 p<-ts[!is.na(ts$match),]
 t1<-table(p$locus)
-png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo/concordance_4digits_nodqa1_2.png",
+png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo_1/concordance_4digits_nodqa1_n.png",
 height=20,width=20, units="cm", res=400)
 ggplot(data=ts[!is.na(ts$match),], aes(as.factor(locus), fill=as.factor(match))) + geom_bar(position="fill",na.rm =TRUE) +
 scale_fill_hue(name="HLA 4 digit\n concordance", breaks=c(0,1),labels=c("FALSE","TRUE")) +
@@ -70,7 +70,7 @@ annotate("text",x=c(1,2,3,4), y=c(0.1,0.1,0.1,0.1), label=c(paste0("N=",t1)))
 dev.off()
 
 
-png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo/concordance_4digits_nodqa1_2_sm.png",
+png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo_1/concordance_4digits_nodqa1_n_sm.png",
 height=20,width=25, units="cm", res=800)
 ggplot(data=ts[!is.na(ts$match),], aes(as.factor(locus), fill=as.factor(match))) + geom_bar(position="fill",na.rm =TRUE) +
 scale_fill_hue(name="HLA 4 digit\n concordance", breaks=c(0,1),labels=c("FALSE","TRUE")) +
