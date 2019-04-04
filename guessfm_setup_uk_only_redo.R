@@ -233,7 +233,7 @@ res<-res[rownames(cs),]
 res$diff<-abs(res$cases_info-res$controls_info)
 w<-which(res$diff>0.01)
 
-message(paste0("remove an additional ",length(w), "SNPs due to imputation r2 differences between cases and controls of >5%"))
+message(paste0("remove an additional ",length(w), "SNPs due to imputation r2 differences between cases and controls of >1%"))
 cs<-cs[-w,]
 DATA<-DATA[rownames(sample),]
 DATA<-DATA[,-w]
