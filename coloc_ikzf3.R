@@ -9,7 +9,7 @@ library(ggplot2)
 mydir <-"/well/todd/users/jinshaw/aad/under_7/guessfm/uk/"
 outdir<-"/well/todd/users/jinshaw/output/aad/under_7/guessfm/uk/"
 
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
 pheno<-pheno[(pheno$group==0|pheno$group==1) & !is.na(pheno$group),]
 
 
