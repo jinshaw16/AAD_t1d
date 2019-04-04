@@ -72,8 +72,8 @@ test<-test[,c("locus","order")]
 g<-merge(g,test,by="locus")
 g$locus<-as.factor(g$locus)
 g$locus<-reorder(g$locus, g$order)
-png(file="/well/todd/users/jinshaw/output/aad/under_7/multinom/redo/split_props_all_n.png",
-width=25,height=20,units="cm",res=400)
+png(file="/well/todd/users/jinshaw/output/aad/under_7/multinom/redo_1/split_props_all_n.png",
+width=25,height=20,units="cm",res=800)
 ggplot(g,aes(as.factor(locus), fill=under)) + geom_bar(position="fill") +
 theme(axis.text.x=element_text(angle=90)) +
 scale_fill_hue(name="Nominal significance") +
@@ -82,7 +82,7 @@ scale_x_discrete(name="Locus")
 dev.off()
 
 g1<-g[as.numeric(g$order)<25,]
-png(file="/well/todd/users/jinshaw/output/aad/under_7/multinom/redo/split_props_top_n.png",
+png(file="/well/todd/users/jinshaw/output/aad/under_7/multinom/redo_1/split_props_top_n.png",
 width=25,height=20,units="cm",res=400)
 ggplot(g1,aes(as.factor(locus), fill=under)) + geom_bar(position="fill")	+
 theme(axis.text.x=element_text(angle=90)) +
