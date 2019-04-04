@@ -12,7 +12,7 @@ library(stringr)
 
 #want to have it so each index SNP from onengut is included in our analysis, not just their proxies:
 
-t1dsnps<-c("rs2476601","rs12068671",  "rs6691977", "rs3024505", "rs13415583",
+t1dsnps<-c("rs2476601","rs78037977",  "rs6691977", "rs3024505", "rs13415583",
            "rs4849135", "rs2111485", "rs35667974", "rs72871627",
 "rs3087243", "rs113010081", "rs6819058","rs67797421", "rs2611215", "rs11954020",
 "rs72975913","rs72928038", "rs1538171", "rs62447205", "rs10277986", "rs6476839",
@@ -55,7 +55,7 @@ d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 
 p<-t1dsnps[!t1dsnps$id %in% colnames(all),]
-p$chromosome=sub("(^.*)[_](.*)[_](.*)","\\2",p$id)
+p$chromosome=ifelse(p$id!="rs6691977",sub("(^.*)[_](.*)[_](.*)","\\2",p$id),1)
 
 samples<-all@samples
 
@@ -65,7 +65,7 @@ d<-"/well/todd/users/jinshaw/aad/under_7/imputation/"
 getsnps<-function(snp){
 #check allignment with the dataset submitted to impute2:
 #read in data from IMPUTE2:
-imputed<-read.impute(file=paste0(d,snp,"_n_out"), rownames=samples$V2)
+imputed<-read.impute(file=paste0(d,snp,"_n_out"), rownames=samples$uniqueID)
 DATA<-imputed
 DATA<-DATA[rownames(DATA) %in% rownames(samples),]
 cs1<-col.summary(DATA)
@@ -81,7 +81,7 @@ cs1$diff<-abs(cs1$exp_freq_a1-cs1$RAF)
 cs2<-cs1[cs1$info>=0.8 & cs1$diff<0.05 & cs1$MAF>0.005,]
 p1<-p[p$id==snp,]
 chrom=p1$chromosome
-a<-grep(p1$snp,cs1$rs_id)
+a<-grep(p1$snp,cs2$rs_id)
 if(length(a)==0){
 l<-read.table(file=paste0("/well/1000G/mathgen.stats.ox.ac.uk/impute/1000GP_Phase3/1000GP_Phase3_chr",chrom,".legend.gz"),header=T,as.is=T)
 a<-l[grepl(p1$snp,l$id),]
@@ -90,10 +90,10 @@ p1$snp<-paste0(chrom,":",a$position,":",a$a1)
 inf<-info[grepl(p1$snp,info$rs_id),]
 cs2<-cs1[grepl(p1$snp, cs1$rs_id),]
 if (length(a)>0){
-message(paste0(snp,"included with info score ",inf$info,", MAF = ",cs2$MAF,", Certain calls = ",cs2$Certain.calls,", HWE z= ",cs2$z.HWE))
+message(paste0(snp," included with info score ",inf$info,", MAF = ",cs2$MAF,", Certain calls = ",cs2$Certain.calls,", HWE z= ",cs2$z.HWE))
 }
 if (length(a)==0){
-message(paste0(snp,"excluded due to either info score ",inf$info,", MAF = ",cs2$MAF,", Certain calls = ",cs2$Certain.calls,", HWE z= ",cs2$z.HWE))
+message(paste0(snp," excluded due to either info score ",inf$info,", MAF = ",cs2$MAF,", Certain calls = ",cs2$Certain.calls,", HWE z= ",cs2$z.HWE))
 }
 DATA<-DATA[,colnames(DATA) %in% cs2$rs_id]
 
