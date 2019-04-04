@@ -33,7 +33,7 @@ load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 
 #get pcs
 #system(paste0("plink --bfile /well/todd/users/jinshaw/aad/geno_unrel_uk_n --indep-pairwise 1000 50 0.2 --out /well/todd/users/jinshaw/aad/under_7/pruned_uk --allow-no-sex"))
-#system(paste0("plink --bfile /well/todd/users/jinshaw/aad/geno_unrel_uk_n --exclude /well/todd/users/jinshaw/aad/under_7/pruned_uk.prune.out",
+#system(paste0("plink --bfile /well/todd/users/jinshaw/aad/geno_unrel_uk_n --exclude /well/todd/users/jinshaw/aad/under_7/pruned_uk.prune.out --keep-allele-order",
 #" --make-bed --out /well/todd/users/jinshaw/aad/under_7/forpcad_uk_n"))
 #system(paste0("~/software/plink2 --bfile /well/todd/users/jinshaw/aad/under_7/forpcad_uk_n ",
 #"--exclude range /well/todd/users/jinshaw/aad/under_7/mhc.txt --make-bed --out /well/todd/users/jinshaw/aad/under_7/forpcad_uk_nomhc_n"))
@@ -43,7 +43,7 @@ load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 
 #read this genotype data in and the pcas (only SNPs we're interested in), then keep only the hits we're interested in:
 
-#load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
+#load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_2.R")
 #pheno<-pheno[pheno$country %in% c("UK","NI"),]
 #rownames(pheno)<-pheno$uniqueID
 #pheno<-pheno[rownames(uk),]
@@ -64,7 +64,7 @@ load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 #ifelse(pheno$onset>=7 & pheno$onset<13 & !is.na(pheno$onset),2,
 #ifelse(pheno$onset>=13 & !is.na(pheno$onset),3,NA))))
 
-#save(pheno,t1dsnps,file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
+#save(pheno,t1dsnps,file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
 
 
 load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
