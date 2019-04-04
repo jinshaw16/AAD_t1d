@@ -26,9 +26,14 @@ load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 
 r<-all
 
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
-r<-r[rownames(pheno),]
-h<-r@snps
+r<-r[rownames(r) %in% rownames(r@samples[r@samples$country %in% c("UK","NI"),]),]
+ord<-rownames(r)
+h2<-r@snps
+h<-read.table(file="/well/todd/users/jinshaw/t1d_risk/immunochip/ic-sanger-b58c.bim",header=F, as.is=T)
+colnames(h)<-c("chromosome","snp.name","cM","position","allele.1","allele.2")
+
+#also want to look at IKZF3:
+hits<-c(hits,"imm_17_35306733")
 
 #Readin the PLINK file of all the individuals and define a 0.5MB region around the lead SNP for imputation:
 imputethem<-function(snp){
@@ -37,7 +42,7 @@ chr<-h1$chromosome
 pos<-h1$position
 min<-pos-250000
 max<-pos+250000
-reg<-h[h$chromosome==chr & h$position>min & h$position<max,]
+reg<-h2[h2$chromosome==chr & h2$position>min & h2$position<max,]
 #allign with 1000G for imputation:
 tg<-read.table(file=paste0("/well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chr,".legend.gz"), header=T,as.is=T)
 reg<-liftthem(reg, chain="hg18ToHg19.over.chain",
@@ -81,8 +86,13 @@ reg$position<-reg$position37
 reg<-cbind(reg,cs)
 b<-merge(reg,t,by="position")
 b$diff<-abs(b$RAF-b$EUR)
-message(paste0("removing ",nrow(b[b$diff>0.05,]),"/",nrow(b)," SNPs due to strand ambiguity"))
-b<-b[b$diff<0.05,]
+b$amb<-ifelse((b$allele.1=="A" & b$allele.2=="T") |
+(b$allele.1=="T" & b$allele.2=="A") |
+(b$allele.1=="G" & b$allele.2=="C") |
+(b$allele.1=="C" & b$allele.2=="G"),1,0)
+b$dodgy<-ifelse(b$MAF>0.45 & b$amb==1,1,0)
+message(paste0("removing ",nrow(b[b$diff>0.05 | b$dodgy==1,]),"/",nrow(b)," SNPs due to strand ambiguity"))
+b<-b[b$diff<0.05 & b$dodgy==0,]
 b<-b[abs(b$z.HWE)<4 & b$Call.rate>0.95,]
 rownames(b)<-b$snp.name
 p<-p[,p@snps$snp.name %in% b$snp.name]
@@ -115,16 +125,15 @@ system(paste0("qsub ~/programs/aad/under_7/imputation/",snp,"_n"))
 return(p)
 }
 
-#loadeddate<-lapply(hits, imputethem)
-#save(loadeddate,file="/well/todd/users/jinshaw/aad/under_7/imputation/bonferonni_imp.RData")
+loadeddate<-lapply(hits, imputethem)
+save(ord, file="/well/todd/users/jinshaw/aad/under_7/imputation/samp_ord.RData")
 
 #load imp
-#load(file="/well/todd/users/jinshaw/aad/under_7/imputation/bonferonni_imp.RData")
-
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
 sample<-pheno
 sample$t1d<-ifelse(sample$affected==2,1,ifelse(sample$affected==1,0,NA))
-#tcols<-rownames(loadeddate[[1]])
+load(file="/well/todd/users/jinshaw/aad/under_7/imputation/samp_ord.RData")
+tcols<-ord
 
 #as part of QC, want to run the association statsictics through SNPTEST so can remove artififactually associated SNPs prior to running GEUSSFM:
 sample$missing<-0
@@ -166,7 +175,7 @@ lapply(hits, dosnptest)
 
 
 #run GUESSFM
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
 #keep only those diagnosed at <7 and from the UK:
 sample<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group) & pheno$country %in% c("NI","UK"),]
 
@@ -224,7 +233,7 @@ res<-res[rownames(cs),]
 res$diff<-abs(res$cases_info-res$controls_info)
 w<-which(res$diff>0.01)
 
-message(paste0("remove an additional ",length(w), "SNPs due to imputation r2 differences between cases and controls of >1%"))
+message(paste0("remove an additional ",length(w), "SNPs due to imputation r2 differences between cases and controls of >5%"))
 cs<-cs[-w,]
 DATA<-DATA[rownames(sample),]
 DATA<-DATA[,-w]
