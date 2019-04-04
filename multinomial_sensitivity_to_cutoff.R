@@ -9,7 +9,7 @@ library(ggplot2)
 
 #load data:
 domultiall<-function(lcutoff){
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_2.R")
 
 t1dsnps$altid<-ifelse(substr(t1dsnps$id,1,1)=="1",paste0("X",t1dsnps$id),t1dsnps$id)
 colnames(pheno)<-ifelse(substr(colnames(pheno),1,1)=="1",paste0("X",colnames(pheno)),colnames(pheno))
@@ -105,8 +105,38 @@ theme(axis.title.y=element_text(size=12),
 axis.text.y=element_text(size=12)) +
 scale_x_continuous(name=bquote("-log"[10]~.(paste0("(p) Likelihood ratio test for heterogeneity between <",lcutoff," and >13"))))
 
-png(file=paste0("/well/todd/users/jinshaw/output/aad/under_7/multinom/redo/inds_het_tests_all_inc_midrange_lessthan_",lcutoff,".png"), res=800,
+png(file=paste0("/well/todd/users/jinshaw/output/aad/under_7/multinom/redo_1/inds_het_tests_all_inc_midrange_lessthan_",lcutoff,".png"), res=800,
 width=40, height=30, units="cm")
+grid.arrange(one,two,ncol=2)
+dev.off()
+
+one<-ggplot(data=r, aes(x=logor3,y=as.factor(loci))) + geom_point(,colour="blue") +
+geom_point(data=r, aes(x=logor2,as.numeric(loci)+0.2), colour="green") +
+geom_point(data=r, aes(x=logor1,as.numeric(loci)+0.4), colour="red") +
+geom_errorbarh(data=r, aes(xmin=lb3,xmax=ub3, y=as.factor(loci)),colour="blue", height=0.01) +
+geom_errorbarh(data=r, aes(xmin=lb2,xmax=ub2, y=as.numeric(loci)+0.2),colour="green", height=0.01) +
+geom_errorbarh(data=r, aes(xmin=lb1,xmax=ub1, y=as.numeric(loci)+0.4),colour="red", height=0.01) +
+geom_vline(xintercept=0, colour="red", linetype="dashed") +
+scale_x_continuous(name=paste0("T1D log-odds ratio for those diagnosed under ",lcutoff," (red), ",lcutoff,"-13 (green) and over 13 (blue)")) +
+scale_y_discrete(name="Locus") +
+theme(axis.title.y=element_text(size=12),
+axis.text.y=element_text(size=12),
+axis.text.x=element_text(size=9),
+axis.title.x=element_text(size=9, hjust=0.94))
+two<-ggplot(data=likelihoods, aes(logp, as.factor(loci))) + geom_point() +
+geom_vline(aes(xintercept=log10(0.05/nrow(r))*-1),colour="red",linetype="dashed") +
+geom_vline(aes(xintercept=log10(0.05)*-1),colour="red",linetype="dotted") +
+geom_vline(aes(xintercept=fdrline), colour="red") +
+scale_y_discrete(name="Locus") +
+theme(axis.title.y=element_text(size=12),
+axis.text.y=element_text(size=12),
+axis.text.x=element_text(size=9),
+axis.title.x=element_text(size=9, hjust=1.5)) +
+scale_x_continuous(name=bquote("-log"[10]~.(paste0("(p) Likelihood ratio test for heterogeneity between <",lcutoff," and >13"))))
+
+
+png(file=paste0("/well/todd/users/jinshaw/output/aad/under_7/multinom/redo_1/inds_het_tests_all_inc_midrange_lessthan_",lcutoff,"_sm.png"), res=800,
+width=25, height=20, units="cm")
 grid.arrange(one,two,ncol=2)
 dev.off()
 
@@ -137,11 +167,42 @@ coord_cartesian(xlim=c(0,5)) +
 theme(axis.title.y=element_text(size=15), 
 axis.text.y=element_text(size=12))
 
-png(file=paste0("/well/todd/users/jinshaw/output/aad/under_7/multinom/redo/het_tests_all_inc_midrange_no_nonsig_lessthan_",lcutoff,".png"), res=800,
+png(file=paste0("/well/todd/users/jinshaw/output/aad/under_7/multinom/redo_1/het_tests_all_inc_midrange_no_nonsig_lessthan_",lcutoff,".png"), res=800,
 width=40, height=30, units="cm")
+grid.arrange(one,two,ncol=2)
+dev.off()
+
+one<-ggplot(data=r1, aes(x=logor3,y=as.factor(loci))) + geom_point(,colour="blue") +
+geom_point(data=r1, aes(x=logor2,as.numeric(loci)+0.2), colour="green") +
+geom_point(data=r1, aes(x=logor1,as.numeric(loci)+0.4), colour="red") +
+geom_errorbarh(data=r1, aes(xmin=lb3,xmax=ub3, y=as.factor(loci)),colour="blue", height=0.01) +
+geom_errorbarh(data=r1, aes(xmin=lb2,xmax=ub2, y=as.numeric(loci)+0.2),colour="green", height=0.01) +
+geom_errorbarh(data=r1, aes(xmin=lb1,xmax=ub1, y=as.numeric(loci)+0.4),colour="red", height=0.01) +
+geom_vline(xintercept=0, colour="red", linetype="dashed") +
+scale_x_continuous(name=paste0("T1D log-odds ratio for those diagnosed under ",lcutoff," (red),",lcutoff,"-13 (green) and over 13 (blue)")) +
+scale_y_discrete(name="Locus") +
+theme(axis.title.y=element_text(size=15),
+axis.text.y=element_text(size=12),
+axis.text.x=element_text(size=9),
+axis.title.x=element_text(size=9, hjust=0.94))
+
+two<-ggplot(data=r1, aes(logp, as.factor(loci))) + geom_point() +
+geom_vline(aes(xintercept=log10(0.05/nrow(r))*-1),colour="red",linetype="dashed") +
+geom_vline(aes(xintercept=fdrline), colour="red", linetype="dotted") +
+scale_y_discrete(name="Locus") +
+scale_x_continuous(name=bquote("-log"[10]~.(paste0("(p) Likelihood ratio test for heterogeneity between <",lcutoff," and >13")))) +
+coord_cartesian(xlim=c(0,5)) +
+theme(axis.title.y=element_text(size=15),
+axis.text.y=element_text(size=12),
+axis.text.x=element_text(size=9),
+axis.title.x=element_text(size=9, hjust=1.5))
+
+
+png(file=paste0("/well/todd/users/jinshaw/output/aad/under_7/multinom/redo_1/het_tests_all_inc_midrange_no_nonsig_lessthan_",lcutoff,"_sm.png"), res=800,
+width=25, height=20, units="cm")
 grid.arrange(one,two,ncol=2)
 dev.off()
 }
 
-#domultiall(6)
+domultiall(6)
 domultiall(5)
