@@ -15,7 +15,11 @@ library(snpStatsWriter)
 #define regions (those passing Bonferroni correction in primary analysis):
 likelihoods<-read.table(file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_n.txt",
 header=T, sep="\t", as.is=T)
-likelihoods<-likelihoods[likelihoods$p<(0.05/nrow(likelihoods)),]
+likelihoods$pfdr<-p.adjust(likelihoods$p,method="BH")
+#remove false positives:
+likelihoods<-likelihoods[likelihoods$pfdr<0.1,]
+likelihoods<-likelihoods[!likelihoods$loci %in%	c("CAMSAP2","CTRB1"),]
+
 hits<-likelihoods$id
 
 
@@ -32,8 +36,6 @@ h2<-r@snps
 h<-read.table(file="/well/todd/users/jinshaw/t1d_risk/immunochip/ic-sanger-b58c.bim",header=F, as.is=T)
 colnames(h)<-c("chromosome","snp.name","cM","position","allele.1","allele.2")
 
-#also want to look at IKZF3:
-hits<-c(hits,"imm_17_35306733")
 
 #Readin the PLINK file of all the individuals and define a 0.5MB region around the lead SNP for imputation:
 imputethem<-function(snp){
