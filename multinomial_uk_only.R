@@ -67,7 +67,7 @@ load(file=paste0(d,"all_inds_unrel_postqc.RData"))
 #save(pheno,t1dsnps,file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
 
 
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_n.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
 t1dsnps$altid<-ifelse(substr(t1dsnps$id,1,1)=="1",paste0("X",t1dsnps$id),t1dsnps$id)
 colnames(pheno)<-ifelse(substr(colnames(pheno),1,1)=="1",paste0("X",colnames(pheno)),colnames(pheno))
 t1dsnps$altid<-ifelse(!t1dsnps$altid %in% colnames(pheno),t1dsnps$snp,t1dsnps$altid)
