@@ -101,3 +101,61 @@ dogremlprev("mid_rangenomhc", 0.003)
 dogremlprev("over_13nomhc",0.002)
 dogremlprev("over_13nomhc",0.003)
 
+
+
+
+#now generate table for supplementary in results:
+
+sink(file="/well/todd/users/jinshaw/output/aad/under_7/greml/heritibilities.txt")
+
+cat(paste0("Disease prevalence (%) (<7,7-13,>13);<7 including HLA;7-13 including HLA;>13 including HLA;<7 excluding HLA;7-13 excluding HLA;>13 excluding HLA\n"))
+
+addline<-function(prevs,und,mid,old, youngnomhc, midnomhc,oldnomhc){
+l<-system(paste0("awk -F \'\t\' \'NR==8\' /well/todd/users/jinshaw/aad/under_7/outreml_",und,".hsq"),intern=T)
+l<-strsplit(l,split="\t")
+h<-data.frame(h=as.numeric(l[[1]][2]), se=as.numeric(l[[1]][3]))
+h$lb<-h$h-(qnorm(0.975)*h$se)
+h$ub<-h$h+(qnorm(0.975)*h$se)
+l1<-system(paste0("awk -F \'\t\' \'NR==8\' /well/todd/users/jinshaw/aad/under_7/outreml_",mid,".hsq"),intern=T)
+l1<-strsplit(l1,split="\t")
+h1<-data.frame(h=as.numeric(l1[[1]][2]), se=as.numeric(l1[[1]][3]))
+h1$lb<-h1$h-(qnorm(0.975)*h1$se)
+h1$ub<-h1$h+(qnorm(0.975)*h1$se)
+l2<-system(paste0("awk -F \'\t\' \'NR==8\' /well/todd/users/jinshaw/aad/under_7/outreml_",old,".hsq"),intern=T)
+l2<-strsplit(l2,split="\t")
+h2<-data.frame(h=as.numeric(l2[[1]][2]), se=as.numeric(l2[[1]][3]))
+h2$lb<-h2$h-(qnorm(0.975)*h2$se)
+h2$ub<-h2$h+(qnorm(0.975)*h2$se)
+
+
+l3<-system(paste0("awk -F \'\t\' \'NR==8\' /well/todd/users/jinshaw/aad/under_7/outreml_",youngnomhc,".hsq"),intern=T)
+l3<-strsplit(l3,split="\t")
+h3<-data.frame(h=as.numeric(l3[[1]][2]), se=as.numeric(l3[[1]][3]))
+h3$lb<-h3$h-(qnorm(0.975)*h3$se)
+h3$ub<-h3$h+(qnorm(0.975)*h3$se)
+l4<-system(paste0("awk -F \'\t\' \'NR==8\' /well/todd/users/jinshaw/aad/under_7/outreml_",midnomhc,".hsq"),intern=T)
+l4<-strsplit(l4,split="\t")
+h4<-data.frame(h=as.numeric(l4[[1]][2]), se=as.numeric(l4[[1]][3]))
+h4$lb<-h4$h-(qnorm(0.975)*h4$se)
+h4$ub<-h4$h+(qnorm(0.975)*h4$se)
+l5<-system(paste0("awk -F \'\t\' \'NR==8\' /well/todd/users/jinshaw/aad/under_7/outreml_",oldnomhc,".hsq"),intern=T)
+l5<-strsplit(l5,split="\t")
+h5<-data.frame(h=as.numeric(l5[[1]][2]), se=as.numeric(l5[[1]][3]))
+h5$lb<-h5$h-(qnorm(0.975)*h5$se)
+h5$ub<-h5$h+(qnorm(0.975)*h5$se)
+
+cat(paste0(prevs,";",round(h$h,digits=3), " (",round(h$lb,digits=3),", ",round(h$ub,digits=3),");",
+round(h1$h,digits=3), " (",round(h1$lb,digits=3),", ",round(h1$ub,digits=3),");",
+round(h2$h,digits=3), " (",round(h2$lb,digits=3),", ",round(h2$ub,digits=3),");",
+round(h3$h,digits=3), " (",round(h3$lb,digits=3),", ",round(h3$ub,digits=3),");",
+round(h4$h,digits=3), " (",round(h4$lb,digits=3),", ",round(h4$ub,digits=3),");",
+round(h5$h,digits=3), " (",round(h5$lb,digits=3),", ",round(h5$ub,digits=3),")\n"))
+}
+addline("0.4,0.4,0.4","under_7","mid_range","over_13","under_7nomhc","mid_rangenomhc","over_13nomhc")
+addline("0.5,0.3,0.3","under_7_0.005","mid_range_0.003","over_13_0.003","under_7nomhc_0.005","mid_rangenomhc_0.003","over_13nomhc_0.003")
+addline("0.5,0.2,0.2","under_7_0.005","mid_range_0.002","over_13_0.002","under_7nomhc_0.005","mid_rangenomhc_0.002","over_13nomhc_0.002")
+sink()
+
+
+
+
