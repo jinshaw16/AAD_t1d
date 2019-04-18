@@ -12,7 +12,7 @@ library(multinomRob)
 
 
 #read imputation results into R:
-load(file="/well/todd/users/jinshaw/aad/under_7/hla_all_n.RData")
+load(file="/well/todd/users/jinshaw/aad/under_7/hla_all_2.RData")
 
 library(multinomRob)
 hla$g0<-ifelse(hla$group==0,1,0)
@@ -67,9 +67,9 @@ return(l)
 
 l_1<-mapply(getlikelihoods,hap=c("dr3_1","dr4_1","dr34_1","dr11_1","dr13_1","dr7_1","dr14_1","dr15_1"), 
 frame=list(hlano34,hlano34,hla,hlano34,hlano34,hlano34,hlano34,hlano34),
-adjusted=c("a0201_1 + a2402_1 + b3906_1 + ",
-"a0201_1 + a2402_1 + b3906_1 + ",
-"a0201_1 + a2402_1 + b3906_1 + ",
+adjusted=c("a0201_1 + a2402_1 + b3906_1 + b1801_1 +",
+"a0201_1 + a2402_1 + b3906_1 + b1801_1 +",
+"a0201_1 + a2402_1 + b3906_1 + b1801_1 +",
 "","","","",""),SIMPLIFY=FALSE)
 l_1<-do.call("rbind",l_1)
 l_1$id<-c("DR3-DQ2","DR4-DQ8","DR3-DQ2/DR4-DQ8","DRB1*11:04-DQB1*03:01",
@@ -125,12 +125,12 @@ l$logp<-log10(l$p)*-1
 return(l)
 }
 l2_1<-mapply(getlikelihoodsadj,hap=c("dpb10301_1","dpb10402_1","a0201_1","a2402_1","a3201_1","a1101_1","b1801_1", "b3906_1","b4403_1"),
-adj=c("a0201_1 + a2402_1 + b3906_1",
-"a0201_1 + a2402_1 + b3906_1",
-"b3906_1",
-"b3906_1",
-"b3906_1",
-"b3906_1",
+adj=c("a0201_1 + a2402_1 + b3906_1 + b1801_1",
+"a0201_1 + a2402_1 + b3906_1 + b1801_1",
+"b3906_1 + b1801_1",
+"b3906_1 + b1801_1",
+"b3906_1 + b1801_1",
+"b3906_1 + b1801_1",
 "a0201_1 + a2402_1 + a3201_1",
 "a0201_1 + a2402_1 + a3201_1",
 "a0201_1 + a2402_1 + a3201_1"),SIMPLIFY=F)
@@ -149,10 +149,10 @@ lout<-lout[order(-lout$logp),]
 lout$ord<-c(nrow(lout):1)
 lout$id<-as.factor(lout$id)
 lout$id<-reorder(lout$id,lout$ord)
-save(lout,file="/well/todd/users/jinshaw/aad/under_7/results/hla_multinomial_n.RData")
+save(lout,file="/well/todd/users/jinshaw/aad/under_7/results/hla_multinomial_2.RData")
 
 
-load(file="/well/todd/users/jinshaw/aad/under_7/results/hla_multinomial_n.RData")
+load(file="/well/todd/users/jinshaw/aad/under_7/results/hla_multinomial_2.RData")
 
 one_out<-ggplot(data=lout, aes(x=logor3,y=as.factor(id))) + geom_point(,colour="blue") +
 geom_point(data=lout, aes(x=logor2,as.numeric(id)+0.2), colour="green") +
@@ -172,7 +172,7 @@ scale_y_discrete(name="Locus") +
 scale_x_continuous(name=bquote("-log"[10]~.(paste0("(p) heterogeneity between <7 and >13"))))+
 theme(axis.title.x=element_text(size=8))
 
-png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo/multinom_all_hla_adjusted_dr34_3_n.png", res=800,
+png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo_1/multinom_all_hla_adjusted_dr34_3_n.png", res=800,
 width=25, height=20, units="cm")
 grid.arrange(one_out,two_out,ncol=2)
 dev.off()

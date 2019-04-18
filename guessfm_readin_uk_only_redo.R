@@ -1,4 +1,4 @@
-#guessfm_readin_uk_only.R
+#guessfm_readin_uk_only_redo.R
 ## what files were created?
 
 library(ggplot2)
@@ -15,7 +15,9 @@ library(GenomicRanges)
 #define regions:
 likelihoods<-read.table(file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_n.txt",
 header=T, sep="\t", as.is=T)
-likelihoods<-likelihoods[likelihoods$p<(0.05/nrow(likelihoods)),]
+likelihoods$pfdr<-p.adjust(likelihoods$p,method="BH")
+likelihoods<-likelihoods[likelihoods$pfdr<0.1,]
+likelihoods<-likelihoods[!likelihoods$loci %in% c("CAMSAP2","CTRB1"),]
 hits<-likelihoods$id
 
 #set paths
@@ -29,6 +31,7 @@ genes<-genes[!duplicated(genes$V1),]
 genes<-GRanges(seqnames=genes$V3,
 ranges=IRanges(genes$V5,end=genes$V6),
 gene=genes$V1)
+
 
 #read in
 readitallin<-function(snp){
@@ -117,19 +120,19 @@ if(length(sp.all@groups)!=0){
 groups <- as(sp.all,"groups")
 
 #for GLIS3, i think all should be part of the same group. just checking this here:
-if (snp=="imm_9_4280823"){
-test.groups<-function(tag1, tag2, groups){
-w<-which(groups@tags %in% c(tag1, tag2))
-groups@tags<-groups@tags[w]
-groups@.Data<-list(groups@.Data[[w[1]]], groups@.Data[[w[2]]])
-return(groups)
-}
-test<-test.groups(groups@tags[1], groups@tags[2], groups)
-check.merge(sm.all, test)
+#if (snp=="imm_9_4280823"){
+#test.groups<-function(tag1, tag2, groups){
+#w<-which(groups@tags %in% c(tag1, tag2))
+#groups@tags<-groups@tags[w]
+#groups@.Data<-list(groups@.Data[[w[1]]], groups@.Data[[w[2]]])
+#return(groups)
+#}
+#test<-test.groups(groups@tags[1], groups@tags[2], groups)
+#check.merge(sm.all, test)
 #Looks like they might be the same signal as pp(all)<<pp(any)
-g2<-groups.merge(groups, c(groups@tags[1], groups@tags[2]))
-groups<-g2
-}
+#g2<-groups.merge(groups, c(groups@tags[1], groups@tags[2]))
+#groups<-g2
+#}
 
 
 #load the snp data:
@@ -252,16 +255,16 @@ dpi=200, height=30, width=20, units="cm")
 
 e1$logzscore<-ifelse(e1$Zscore>0,log10(e1$Zscore),
 ifelse(e1$Zscore<=0, log10(-e1$Zscore)*-1,NA))
-if(snp %in% c("imm_17_35306733","imm_16_73809828")){
+if(snp %in% c("imm_17_35306733")){
 e1<-e1[e1$Pvalue<5*10^-150,]
 }
-if(snp %in% c("imm_1_170941164","imm_15_77022012","imm_1_205006527")){
+if(snp %in% c("imm_15_77022012","imm_1_205006527","imm_20_1564206")){
 e1<-e1[e1$Pvalue<5*10^-50,]
 }
-if(snp %in% c("imm_10_6170083")){
+if(snp %in% c("imm_10_6170083","imm_6_128335625")){
 e1<-e1[e1$Pvalue<5*10^-25,]
 }
-if(snp %in% c("imm_9_4280823","imm_4_123335627","imm_6_128328079","imm_14_97557760")){
+if(snp %in% c("imm_9_4280823","imm_4_123335627","imm_14_97557760")){
 e1<-e1[e1$Pvalue<5*10^-8,]
 }
 summx$SNPPos<-summx$position
@@ -277,12 +280,15 @@ direction$lb<-direction$beta-(qnorm(0.975)*direction$se)
 direction$ub<-direction$beta+(qnorm(0.975)*direction$se)
 direction<-merge(summx,direction,by="snp",all.x=T)
 #export for the paper supplementary:
+if (snp!="imm_20_1564206"){
 direction<-direction[direction$ppsum>0.9,]
+}
 ds<-direction[,c("snp","position","beta","ref","effect","pp","ppsum")]
 ds$snp<-ifelse(substr(ds$snp,1,2)=="rs",gsub("\\..*","",ds$snp),ds$snp)
 ds$ppsum<-round(ds$ppsum,digits=4)
 ds$beta<-round(ds$beta,digits=4)
 ds$pp<-format(ds$pp,scientific=T,digits=3)
+ds<-ds[order(ds$position),]
 write.table(ds,file=paste0("/well/todd/users/jinshaw/output/aad/under_7/guessfm/uk/",snp,"/supl_mat.txt"),col.names=T,row.names=F,
 sep="\t",quote=F)
 
@@ -328,7 +334,9 @@ direction$lb<-direction$beta-(qnorm(0.975)*direction$se)
 direction$ub<-direction$beta+(qnorm(0.975)*direction$se)
 
 direction<-merge(direction,summx,by="snp",all.x=T)
+if (snp!="imm_20_1564206"){
 direction<-direction[direction$ppsum>0.9,]
+}
 direct<-ggplot(data=direction, aes(position, beta,colour=as.factor(tag))) + geom_point() +
 geom_errorbar(data=direction, aes(ymin=lb, ymax=ub, x=position,colour=as.factor(tag))) +
 scale_y_continuous(name="log-odds ratio (<7)") + 
@@ -423,7 +431,6 @@ dpi=800, height=20, width=15, units="cm")
 }
 }
 }
-
 lapply(hits, readitallin)
 
 

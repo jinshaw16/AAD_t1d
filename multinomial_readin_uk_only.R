@@ -1,5 +1,6 @@
 #multinomial_readin_uk_only.R
-
+library(ggplot2)
+library(gridExtra)
 
 load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
 t1dsnps$altid<-ifelse(substr(t1dsnps$id,1,1)=="1",paste0("X",t1dsnps$id),t1dsnps$id)

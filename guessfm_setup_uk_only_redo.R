@@ -219,7 +219,9 @@ cs<-cs[colnames(DATA),]
 cs$diff<-abs(cs$RAF-cs$exp_freq_a1)
 cs<-cs[cs$diff<0.05,]
 wh1<-which(cs$type==2 & cs$concord_type0<0.8)
+if (length(wh1)>0){
 cs<-cs[-wh1,]
+}
 DATA<-DATA[,colnames(DATA) %in% rownames(cs)]
 cs<-cs[cs$rs_id %in% colnames(DATA),]
 rownames(cs)<-cs$rs_id
@@ -252,6 +254,8 @@ DATA<-DATA[,-w2]
 
 #Run bayesian variable selection via GUESS
 mydir <-"/well/todd/users/jinshaw/aad/under_7/guessfm/uk/"
+if(!dir.exists(paste0(mydir,snp)))
+dir.create(paste0(mydir,snp),recursive=T)
 save(Y, DATA, covariates, file=paste0(mydir,snp, "/data.RData"))
 load(file=paste0(mydir, snp,"/data.RData"))
 

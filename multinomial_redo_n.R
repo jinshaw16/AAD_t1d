@@ -37,7 +37,7 @@ t1dloci<-c("PTPN22", "TNFSF4","CAMSAP2",
 "IL10", "AFF3", "ACOXL",
 "IFIH1 (1)", "IFIH1 (2)", "IFIH1 (3)",
 "CTLA4", "CCR5", "IL2/IL21 (1)", "IL2/IL21 (2)", "CPE",
-"IL7R","PTPRK/THEMIS", "BACH2", "CENPW",
+"IL7R","THEMIS", "BACH2", "CENPW",
 "IKZF1", "COBL",
 "GLIS3", "IL2RA (1)", "IL2RA (2)", "IL2RA (3)","IL2RA (4)",
 "PTEN","INS (1)","INS (2)", "CD69", "IKZF4",
@@ -86,9 +86,9 @@ return(d)
 #table(rownames(b)==rownames(pheno))
 #pheno<-cbind(pheno,b)
 #p1<-pheno
-#save(b,pheno,t1dsnps, file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
+#save(b,pheno,t1dsnps, file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_2.R")
 
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_n.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_2.R")
 t1dsnps$altid<-ifelse(substr(t1dsnps$id,1,1)=="1",paste0("X",t1dsnps$id),t1dsnps$id)
 colnames(pheno)<-ifelse(substr(colnames(pheno),1,1)=="1",paste0("X",colnames(pheno)),colnames(pheno))
 t1dsnps$altid<-ifelse(!t1dsnps$altid %in% colnames(pheno),t1dsnps$snp,t1dsnps$altid)
@@ -149,4 +149,5 @@ save(l,file=paste0("/well/todd/users/jinshaw/aad/under_7/results/",snpname,"_n.R
 }
 pheno$`seq-rs35667974`<-ifelse(pheno$`seq-rs35667974`==2,0,ifelse(pheno$`seq-rs35667974`==0,2,pheno$`seq-rs35667974`))
 getlikelihoods(t1dsnps$altid[as.numeric(args)])
+
 
