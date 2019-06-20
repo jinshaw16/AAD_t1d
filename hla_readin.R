@@ -11,7 +11,7 @@ aaddir<-"/well/todd/users/jinshaw/aad/"
 
 #read imputation results into R:
 read<-function(num,gene){
-A<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/HIBAG_new_redo_2",num),header=T, as.is=T)
+A<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/HIBAG_new_redo_3",num),header=T, as.is=T)
 colnames(A)[2:5]<-c(paste0(gene,"1"),paste0(gene,"2"),paste0(gene,"prob"),paste0(gene,"matching"))
 return(A)
 }
@@ -21,7 +21,7 @@ j<-j[,c(-6,-11,-16,-21,-26, -31)]
 
 
 #get pheno and covar info to merge in:
-load(file=paste0(d,"all_inds_unrel_postqc.RData"))
+load(file=paste0(d,"all_inds_unrel_postqc_3.RData"))
 pheno<-all@samples
 
 #names have changed over time for initial AAD publication so just re-mapping
@@ -353,4 +353,4 @@ hla$b1801_1<-hla$b1801
 hla$b3906_1<-hla$b3906
 hla$b4403_1<-hla$b4403
 
-save(hla, file="/well/todd/users/jinshaw/aad/under_7/hla_all_2.RData")
+save(hla, file="/well/todd/users/jinshaw/aad/under_7/hla_all_3.RData")

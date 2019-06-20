@@ -25,11 +25,11 @@ t1dsnps<-c("rs2476601","rs78037977",  "rs6691977", "rs3024505", "rs13415583",
 "rs1615504", "rs34536443", "rs12720356", "rs402072", "rs516246",
 "rs6043409", "rs11203202", "rs6518350", "rs4820830", "rs229533")
 
-t1dloci<-c("PTPN22", "FASLG","CAMSAP2",
+t1dloci<-c("PTPN22", "TNFSF4","CAMSAP2",
 "IL10", "AFF3", "ACOXL",
 "IFIH1 (1)", "IFIH1 (2)", "IFIH1 (3)",
 "CTLA4", "CCR5", "IL2/IL21 (1)", "IL2/IL21 (2)", "CPE",
-"IL7R","PTPRK/THEMIS", "BACH2", "CENPW",
+"IL7R","THEMIS", "BACH2", "CENPW",
 "IKZF1", "COBL",
 "GLIS3", "IL2RA (1)", "IL2RA (2)", "IL2RA (3)","IL2RA (4)",
 "PTEN","INS (1)","INS (2)", "CD69", "IKZF4",
@@ -52,7 +52,7 @@ t1dsnps$snp<-as.character(t1dsnps$snp)
 
 d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 #read SNP and phenotype data:
-load(file=paste0(d,"all_inds_unrel_postqc.RData"))
+load(file=paste0(d,"all_inds_unrel_postqc_3.RData"))
 
 p<-t1dsnps[!t1dsnps$id %in% colnames(all),]
 p$chromosome=ifelse(p$id!="rs6691977",sub("(^.*)[_](.*)[_](.*)","\\2",p$id),1)
@@ -65,7 +65,7 @@ d<-"/well/todd/users/jinshaw/aad/under_7/imputation/"
 getsnps<-function(snp){
 #check allignment with the dataset submitted to impute2:
 #read in data from IMPUTE2:
-imputed<-read.impute(file=paste0(d,snp,"_n_out"), rownames=samples$uniqueID)
+imputed<-read.impute(file=paste0(d,snp,"_3_out"), rownames=samples$uniqueID)
 DATA<-imputed
 DATA<-DATA[rownames(DATA) %in% rownames(samples),]
 cs1<-col.summary(DATA)
@@ -73,7 +73,7 @@ cs1$rsid<-gsub(":.*","",rownames(cs1))
 cs1$rs_id<-rownames(cs1)
 
 #Check imputation quality:
-info<-read.table(file=paste0(d,snp,"_n_out_info"), header=TRUE)
+info<-read.table(file=paste0(d,snp,"_3_out_info"), header=TRUE)
 info$snp<-c(1:nrow(info))
 cs1<-cbind(cs1,info)
 cs1$diff<-abs(cs1$exp_freq_a1-cs1$RAF)
@@ -98,7 +98,7 @@ message(paste0(snp," excluded due to either info score ",inf$info,", MAF = ",cs2
 DATA<-DATA[,colnames(DATA) %in% cs2$rs_id]
 
 
-save(cs2, DATA, file=paste0(d,snp,"_n_clean.RData"))
+save(cs2, DATA, file=paste0(d,snp,"_3_clean.RData"))
 return(DATA)
 }
 

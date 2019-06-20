@@ -6,9 +6,9 @@ args = commandArgs(trailingOnly=TRUE)
 
 #received this code from Dan.
 dir="/well/todd/users/jinshaw/aad/"
-fileStem="all_ages_n"
+fileStem="all_ages_3"
 
-outFile="/well/todd/users/jinshaw/aad/under_7/imputation/HIBAG_new_redo_2"
+outFile="/well/todd/users/jinshaw/aad/under_7/imputation/HIBAG_new_redo_3"
 
 setwd(dir)
 

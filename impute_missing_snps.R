@@ -49,7 +49,7 @@ t1dsnps$snp<-as.character(t1dsnps$snp)
 
 d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 #read SNP and phenotype data:
-load(file=paste0(d,"all_inds_unrel_postqc.RData"))
+load(file=paste0(d,"all_inds_unrel_postqc_3.RData"))
 
 hits<-t1dsnps[!t1dsnps$id %in% colnames(all),"id"]
 h<-all@snps
@@ -119,7 +119,7 @@ rownames(b)<-b$snp.name
 p<-p[,p@snps$snp.name %in% b$snp.name]
 b<-b[colnames(p),]
 colnames(p)<-b$id
-write.impute(pedfile=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_n"),
+write.impute(pedfile=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_3"),
 as(p,"SnpMatrix"),
 a1=b$allele.1,
 a2=b$allele.2,
@@ -128,21 +128,21 @@ min<-min(b$position)
 max<-max(b$position)
 
 #now write a script to run this through impute2:
-sink(file=paste0("~/programs/aad/under_7/imputation/",snp,"_n"))
+sink(file=paste0("~/programs/aad/under_7/imputation/",snp,"_3"))
 cat(paste0("#!/bin/bash
 #$ -cwd -V
 #$ -N ",snp," -j y
 #$ -P todd.prjc -q long.qc
 
 /apps/well/impute2/2.3.0/impute2 -g /well/todd/users/jinshaw/aad/under_7/imputation/",snp,
-"_n -m /well/1000G/WTCHG/1000GP_Phase3/genetic_map_chr",chr,"_combined_b37.txt -int ",min-10000," ",max+10000,
+"_3 -m /well/1000G/WTCHG/1000GP_Phase3/genetic_map_chr",chr,"_combined_b37.txt -int ",min-10000," ",max+10000,
 " -h /well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chr,
 ".hap.gz -l /well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chr,".legend.gz -o /well/todd/users/jinshaw/aad/under_7/imputation/",
-snp,"_n_out\n"))
+snp,"_3_out\n"))
 sink()
 
-system(paste0("chmod a=rwx ~/programs/aad/under_7/imputation/",snp,"_n"))
-system(paste0("qsub ~/programs/aad/under_7/imputation/",snp,"_n"))
+system(paste0("chmod a=rwx ~/programs/aad/under_7/imputation/",snp,"_3"))
+system(paste0("qsub ~/programs/aad/under_7/imputation/",snp,"_3"))
 return(p)
 }
 

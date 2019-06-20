@@ -1,4 +1,4 @@
-#guessfm_setup_uk_only_redo.R
+#guessfm_setup_uk_only_redo_sex_adj.R
 
 library(GUESSFM)
 library(R2GUESS)
@@ -13,24 +13,24 @@ library(snpStatsWriter)
 
 #want to run GUESSFM on each region.
 #define regions (those passing Bonferroni correction in primary analysis):
-likelihoods<-read.table(file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_n.txt",
+likelihoods<-read.table(file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_3.txt",
 header=T, sep="\t", as.is=T)
 likelihoods$pfdr<-p.adjust(likelihoods$p,method="BH")
 #remove false positives:
 likelihoods<-likelihoods[likelihoods$pfdr<0.1,]
-likelihoods<-likelihoods[!likelihoods$loci %in%	c("CAMSAP2","CTRB1"),]
+
 
 hits<-likelihoods$id
 
 
 d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 #read SNP and phenotype data:
-load(file=paste0(d,"all_inds_unrel_postqc.RData"))
+load(file=paste0(d,"all_inds_unrel_postqc_3.RData"))
 
 
 r<-all
 
-r<-r[rownames(r) %in% rownames(r@samples[r@samples$country %in% c("UK","NI"),]),]
+r<-r[rownames(r) %in% rownames(r@samples[r@samples$country %in% c("UK","NI") & !is.na(r@samples$country),]),]
 ord<-rownames(r)
 h2<-r@snps
 h<-read.table(file="/well/todd/users/jinshaw/t1d_risk/immunochip/ic-sanger-b58c.bim",header=F, as.is=T)
@@ -101,7 +101,7 @@ p<-p[,p@snps$snp.name %in% b$snp.name]
 b<-b[colnames(p),]
 colnames(p)<-b$id
 
-write.impute(pedfile=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_n"),
+write.impute(pedfile=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_3"),
 as(p,"SnpMatrix"),
 a1=b$allele.1,
 a2=b$allele.2,
@@ -109,29 +109,29 @@ bp=b$position)
 min<-min(b$position)
 max<-max(b$position)
 #now write a script to run this through impute2:
-sink(file=paste0("~/programs/aad/under_7/imputation/",snp,"_n"))
+sink(file=paste0("~/programs/aad/under_7/imputation/",snp,"_3"))
 cat(paste0("#!/bin/bash
 #$ -cwd -V
 #$ -N ",snp," -j y
 #$ -P todd.prjc -q long.qc
 
 /apps/well/impute2/2.3.0/impute2 -g /well/todd/users/jinshaw/aad/under_7/imputation/",snp,
-"_n -m /well/1000G/WTCHG/1000GP_Phase3/genetic_map_chr",chr,"_combined_b37.txt -int ",min-10000," ",max+10000,
+"_3 -m /well/1000G/WTCHG/1000GP_Phase3/genetic_map_chr",chr,"_combined_b37.txt -int ",min-10000," ",max+10000,
 " -h /well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chr,
 ".hap.gz -l /well/1000G/WTCHG/1000GP_Phase3/1000GP_Phase3_chr",chr,".legend.gz -o /well/todd/users/jinshaw/aad/under_7/imputation/",
-snp,"_n_out\n"))
+snp,"_3_out\n"))
 sink()
 
-system(paste0("chmod a=rwx ~/programs/aad/under_7/imputation/",snp,"_n"))
-system(paste0("qsub ~/programs/aad/under_7/imputation/",snp,"_n"))
+system(paste0("chmod a=rwx ~/programs/aad/under_7/imputation/",snp,"_3"))
+system(paste0("qsub ~/programs/aad/under_7/imputation/",snp,"_3"))
 return(p)
 }
 
-loadeddate<-lapply(hits, imputethem)
-save(ord, file="/well/todd/users/jinshaw/aad/under_7/imputation/samp_ord.RData")
+#loadeddate<-lapply(hits, imputethem)
+#save(ord, file="/well/todd/users/jinshaw/aad/under_7/imputation/samp_ord.RData")
 
 #load imp
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_3.R")
 sample<-pheno
 sample$t1d<-ifelse(sample$affected==2,1,ifelse(sample$affected==1,0,NA))
 load(file="/well/todd/users/jinshaw/aad/under_7/imputation/samp_ord.RData")
@@ -144,53 +144,53 @@ write.table(s, file="/well/todd/users/jinshaw/aad/under_7/imputation/uk",col.nam
 
 
 #generate SNPTEST sample file:
-s1<-sample[,c("uniqueID","affected","PC1","PC2","PC3","PC4","PC5")]
-headit<-data.frame(ID_1=0,ID_2=0,missing=0,t1d="B",PC1="C",PC2="C",PC3="C",PC4="C",PC5="C")
-s1$ID_1=s1$uniqueID
-s1$ID_2=s1$uniqueID
-s1$missing<-0
-s1$t1d<-ifelse(s1$affected==2,1,ifelse(s1$affected==1,0,NA))
-s1<-s1[,c("ID_1","ID_2","missing","t1d","PC1","PC2","PC3","PC4","PC5")]
-for (vars in colnames(s1)){
-s1[,vars]<-as.character(s1[,vars])
-}
-s1<-rbind(headit,s1)
-write.table(s1,file="/well/todd/users/jinshaw/aad/under_7/imputation/geno.sample",col.names=T,row.names=F,sep=" ",quote=F)
+#s1<-sample[,c("uniqueID","affected","PC1","PC2","PC3","PC4","PC5","sex")]
+#headit<-data.frame(ID_1=0,ID_2=0,missing=0,t1d="B",PC1="C",PC2="C",PC3="C",PC4="C",PC5="C",sex="D")
+#s1$ID_1=s1$uniqueID
+#s1$ID_2=s1$uniqueID
+#s1$missing<-0
+#s1$t1d<-ifelse(s1$affected==2,1,ifelse(s1$affected==1,0,NA))
+#s1<-s1[,c("ID_1","ID_2","missing","t1d","PC1","PC2","PC3","PC4","PC5","sex")]
+#for (vars in colnames(s1)){
+#s1[,vars]<-as.character(s1[,vars])
+#}
+#s1<-rbind(headit,s1)
+#write.table(s1,file="/well/todd/users/jinshaw/aad/under_7/imputation/geno_sexadj.sample",col.names=T,row.names=F,sep=" ",quote=F)
 dosnptest<-function(snp){
-sink(file=paste0("~/programs/aad/under_7/snptest_scripts/",snp,"_uk.sh"))
+sink(file=paste0("~/programs/aad/under_7/snptest_scripts/",snp,"_uk_sex_adj.sh"))
 cat(paste0("qctool -g /well/todd/users/jinshaw/aad/under_7/imputation/",snp,
-"_n_out -s /well/todd/users/jinshaw/aad/under_7/imputation/geno.sample -filetype gen -incl-samples ",
-"/well/todd/users/jinshaw/aad/under_7/imputation/uk -os /well/todd/users/jinshaw/aad/under_7/imputation/uk.sample_",snp,
+"_3_out -s /well/todd/users/jinshaw/aad/under_7/imputation/geno_sexadj.sample -filetype gen -incl-samples ",
+"/well/todd/users/jinshaw/aad/under_7/imputation/uk -os /well/todd/users/jinshaw/aad/under_7/imputation/uk_sexadj.sample_",snp,
 " -og /well/todd/users/jinshaw/aad/under_7/imputation/uk_out_",snp," -ofiletype gen\n"))
 
 cat(paste0("/apps/well/snptest/2.5.4-beta3_CentOS6.6_x86_64_dynamic/snptest_v2.5.4-beta3 ",
-"-data /well/todd/users/jinshaw/aad/under_7/imputation/uk_out_",snp," /well/todd/users/jinshaw/aad/under_7/imputation/uk.sample_",snp,
-" -pheno t1d -frequentist 1 -method newml -cov_all_continuous -o /well/todd/users/jinshaw/aad/under_7/imputation/snptest/",snp,"_uk"))
+"-data /well/todd/users/jinshaw/aad/under_7/imputation/uk_out_",snp," /well/todd/users/jinshaw/aad/under_7/imputation/uk_sexadj.sample_",snp,
+" -pheno t1d -frequentist 1 -method newml -cov_all -o /well/todd/users/jinshaw/aad/under_7/imputation/snptest/",snp,"_sexadj_uk"))
 sink()
-create_job(path=paste0("~/programs/aad/under_7/snptest_scripts/"),subname=paste0(snp,"_uk"),
-jobname=paste0(snp,"_uk"),projectletter="c", qletter="c", qlength="short")
-system(paste0("chmod a=rwx ~/programs/aad/under_7/snptest_scripts/",snp,"_uk.sh"))
-system(paste0("qsub ~/programs/aad/under_7/snptest_scripts/",snp,"_uk"))
+create_job(path=paste0("~/programs/aad/under_7/snptest_scripts/"),subname=paste0(snp,"_uk_sex_adj"),
+jobname=paste0(snp,"_uk_sex_adj"),projectletter="c", qletter="c", qlength="short")
+system(paste0("chmod a=rwx ~/programs/aad/under_7/snptest_scripts/",snp,"_uk_sex_adj.sh"))
+system(paste0("qsub ~/programs/aad/under_7/snptest_scripts/",snp,"_uk_sex_adj"))
 }
-lapply(hits, dosnptest)
+#lapply(hits, dosnptest)
 
 
 
 #run GUESSFM
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_3.R")
 #keep only those diagnosed at <7 and from the UK:
-sample<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group) & pheno$country %in% c("NI","UK"),]
+sample<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group) & pheno$country %in% c("NI","UK") & !is.na(pheno$sex),]
 
 sample$t1d<-ifelse(sample$affected==2,1,ifelse(sample$affected==1,0,NA))
 
 runguessfm<-function(snp){
-tcols<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/uk.sample_",snp),skip=2,as.is=T,sep=" ")
+tcols<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/geno_sexadj.sample"),skip=2,as.is=T,sep=" ")
 nam<-tcols$V2
-DATA<-read.impute(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_n_out"), rownames=nam)
+DATA<-read.impute(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_3_out.gz"), rownames=nam)
 DATA<-DATA[rownames(sample),]
-info<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_n_out_info"),header=T)
+info<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"_3_out_info"),header=T)
 Y<-data.frame(outcome=sample$t1d)
-covariates<-sample[,c("PC1","PC2","PC3","PC4","PC5")]
+covariates<-sample[,c("PC1","PC2","PC3","PC4","PC5","sex")]
 
 rownames(Y)<-rownames(sample)
 rownames(covariates)<-rownames(sample)
@@ -229,7 +229,7 @@ cs<-cs[colnames(DATA),]
 
 
 #get info for cases and controls:
-res<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/snptest/",snp,"_uk"),header=T,as.is=T)
+res<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/snptest/",snp,"_sexadj_uk"),header=T,as.is=T)
 res<-res[res$rsid %in% rownames(cs),]
 res<-res[!duplicated(res$rsid),]
 rownames(res)<-res$rsid
@@ -254,30 +254,30 @@ DATA<-DATA[,-w2]
 
 #Run bayesian variable selection via GUESS
 mydir <-"/well/todd/users/jinshaw/aad/under_7/guessfm/uk/"
-if(!dir.exists(paste0(mydir,snp)))
-dir.create(paste0(mydir,snp),recursive=T)
-save(Y, DATA, covariates, file=paste0(mydir,snp, "/data.RData"))
-load(file=paste0(mydir, snp,"/data.RData"))
+if(!dir.exists(paste0(mydir,snp,"_sexadj")))
+dir.create(paste0(mydir,snp,"_sexadj"),recursive=T)
+save(Y, DATA, covariates, file=paste0(mydir,snp, "_sexadj/data.RData"))
+load(file=paste0(mydir, snp,"_sexadj/data.RData"))
 
 
-com<-run.bvs(X=DATA,Y=Y[,"outcome"],gdir=paste0(mydir,snp),
+com<-run.bvs(X=DATA,Y=Y[,"outcome"],gdir=paste0(mydir,snp,"_sexadj"),
         guess.command="/users/todd/jinshaw/software/GUESS_v1.1/Main/GUESS",
         nexp=3,                # expected number of causal variants, an overestimate
         nsave=10000,            # number of best models to save
         tag.r2=0.99, 	 	#R2 tag value
         family="binomial",
 	covars=covariates, run=FALSE)      
-sink(file=paste0("~/programs/aad/under_7/guessscripts/uk_",snp,".sh"))
+sink(file=paste0("~/programs/aad/under_7/guessscripts/uk_",snp,"_sexadj.sh"))
 cat(paste0("#!/bin/bash
 #$ -cwd -V
 #$ -N ",snp," -j y
 #$ -P todd.prjc -q long.qc
 
-#uk_",snp,".sh
+#uk_",snp,"_sexadj.sh
 ",com,"\n"))
 sink()
-system(paste0("chmod a=rwx ~/programs/aad/under_7/guessscripts/uk_",snp,".sh"))
-system(paste0("qsub ~/programs/aad/under_7/guessscripts/uk_",snp,".sh"))
+system(paste0("chmod a=rwx ~/programs/aad/under_7/guessscripts/uk_",snp,"_sexadj.sh"))
+system(paste0("qsub ~/programs/aad/under_7/guessscripts/uk_",snp,"_sexadj.sh"))
 }
 commands<-lapply(hits,runguessfm)
 

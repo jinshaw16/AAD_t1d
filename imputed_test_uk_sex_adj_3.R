@@ -1,4 +1,4 @@
-#imputed_test_uk.R
+#imputed_test_uk_sex_adj_3.R
 #univariable tests to get log-odds ratios for the under 7s at each of the credible SNPs:
 
 library(ggplot2)
@@ -17,16 +17,16 @@ args = commandArgs(trailingOnly=TRUE)
 mydir <-"/well/todd/users/jinshaw/aad/under_7/guessfm/uk/"
 outdir<-"/well/todd/users/jinshaw/output/aad/under_7/guessfm/uk/"
 
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_3.R")
 
 #keep only those diagnosed at <7:
-pheno<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group),]
+pheno<-pheno[(pheno$group==0 | pheno$group==1) & !is.na(pheno$group) & !is.na(pheno$sex),]
 pheno$t1d<-ifelse(pheno$affected==2,1,ifelse(pheno$affected==1,0,NA))
 
 getodds<-function(snp){
-load(file=paste0(mydir,snp, "/data.RData"))
+load(file=paste0(mydir,snp, "_sexadj/data.RData"))
 
-mydir<-paste0(mydir,snp,"/")
+mydir<-paste0(mydir,snp,"_sexadj/")
 colnames(DATA)<-gsub(":",".",colnames(DATA))
 colnames(DATA)<-gsub("<",".",colnames(DATA))
 colnames(DATA)<-gsub(">",".",colnames(DATA))
@@ -37,8 +37,11 @@ paste0("X",colnames(DATA)),colnames(DATA))
 load(file=paste0(mydir,"summx.RData"))
 
 #get the alleles:
-system(paste0("awk -F \' \' \' {print $1,$2,$3,$4,$5}\' /well/todd/users/jinshaw/aad/under_7/imputation/",
-snp,"_out_uk_n > /well/todd/users/jinshaw/aad/under_7/imputation/",snp,"alleles"))
+sink(file=paste0("~/programs/aad/under_7/imputation/extract_",snp,".sh"))
+cat(paste0("awk -F \' \' \' {print $1,$2,$3,$4,$5}\' <(gzip -dc /well/todd/users/jinshaw/aad/under_7/imputation/",
+snp,"_3_out.gz) > /well/todd/users/jinshaw/aad/under_7/imputation/",snp,"alleles"))
+sink()
+system(paste0("bash ~/programs/aad/under_7/imputation/extract_",snp,".sh")) 
 alls<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"alleles"),header=F,as.is=T)
 alls$V2<-gsub(":",".",alls$V2)
 alls$V2<-gsub("<",".",alls$V2)
@@ -52,7 +55,7 @@ alls<-alls[alls$V2 %in% colnames(DATA),]
 alls<-alls[!duplicated(alls$V2),]
 rownames(alls)<-alls$V2
 alls<-alls[colnames(DATA),]
-s<-snp.rhs.estimates(formula=group ~ PC1 + PC2 + PC3 + PC4 + PC5, data=pheno, link="logit", family="binomial",
+s<-snp.rhs.estimates(formula=group ~ PC1 + PC2 + PC3 + PC4 + PC5 + sex, data=pheno, link="logit", family="binomial",
 snp.data=DATA, uncertain=TRUE)
 s<-do.call("rbind",s)
 s1<-as.data.frame(s)
@@ -73,7 +76,7 @@ w<-which(cs$RAF>0.5)
 s1[w,"beta"]<-s1[w,"beta"]*-1
 s1[w,"ref"]<-alls[w,"V5"]
 s1[w,"effect"]<-alls[w,"V4"]
-write.table(s1, file=paste0("/well/todd/users/jinshaw/aad/under_7/results/",snp,"_effects_uk.txt"),
+write.table(s1, file=paste0("/well/todd/users/jinshaw/aad/under_7/results/",snp,"_effects_uk_sex_adj_3.txt"),
 quote=F, col.names=T, row.names=F, sep="\t")
 }
 

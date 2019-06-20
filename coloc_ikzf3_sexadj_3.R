@@ -1,4 +1,4 @@
-#coloc_ikzf3.R
+#coloc_ikzf3_sexadj_3.R
 #looking at colocalisation of disease association and whole blood eQTL for IKZF3, ORMDL3 and GASDMB
 library(stringr)
 library(snpStats)
@@ -10,13 +10,13 @@ library(ggbio)
 mydir <-"/well/todd/users/jinshaw/aad/under_7/guessfm/uk/"
 outdir<-"/well/todd/users/jinshaw/output/aad/under_7/guessfm/uk/"
 
-load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_2.R")
+load(file="/well/todd/users/jinshaw/aad/under_7/pheno_mult_uk_3.R")
 pheno<-pheno[(pheno$group==0|pheno$group==1) & !is.na(pheno$group),]
-
+pheno<-pheno[!is.na(pheno$sex),]
 
 #and the imputed data for this region:
 getdis<-function(snp){
-load(file=paste0(mydir,snp, "/data.RData"))
+load(file=paste0(mydir,snp, "_sexadj/data.RData"))
 #Generate summary stats for each SNP in the 0.5 Mb region:
 DATA<-DATA[rownames(pheno),]
 colnames(DATA)<-gsub(":",".",colnames(DATA))
@@ -39,7 +39,7 @@ alls<-alls[!duplicated(alls$V2),]
 rownames(alls)<-alls$V2
 alls<-alls[colnames(DATA),]
 
-s<-snp.rhs.estimates(formula=group ~ PC1 + PC2 + PC3 + PC4 + PC5, data=pheno, link="logit", family="binomial",
+s<-snp.rhs.estimates(formula=group ~ PC1 + PC2 + PC3 + PC4 + PC5 + sex, data=pheno, link="logit", family="binomial",
 snp.data=DATA, uncertain=TRUE)
 s<-do.call("rbind",s)
 s1<-as.data.frame(s)
@@ -348,7 +348,7 @@ dfb<-rbind(df1,df2)
 l<-s1[,c("snp","SNPPos")]
 dfb<-merge(dfb,l,by="snp")
 dfb$SNP<-gsub("\\.",":",dfb$SNP)
-load(file=paste0(mydir,snp, "/data.RData"))
+load(file=paste0(mydir,snp, "_sexadj/data.RData"))
 DATA<-DATA[,colnames(DATA) %in% dfb$SNP]
 top<-dfb[dfb$trait==paste0(gene," eQTL"),]
 top<-top[top$absz==max(top$absz),]
@@ -369,11 +369,16 @@ o2<-ggplot(data=dfb1[dfb1$trait==paste0("T1D"),], aes(SNPPos, absz, colour=ld)) 
 scale_y_continuous(name="Absolute T1D z-score") +
 scale_colour_continuous(name=paste0("LD with top \n",gene," eQTL"))
 t<-tracks(o1,o2)
-ggsave(t, file=paste0("/well/todd/users/jinshaw/output/aad/under_7/coloc/",snp,"_",gene,".png"),
-width=20,height=20, dpi=300, units="cm")
+ggsave(t, file=paste0("/well/todd/users/jinshaw/output/aad/under_7/coloc/",snp,"_",gene,"_sexadj_3.png"),
+width=25,height=20, dpi=800, units="cm")
 }
 
-
+il10<-testcoloc(snp="imm_1_205006527", "IL10")
+plotit(snp="imm_1_205006527","IL10")
+il24<-testcoloc(snp="imm_1_205006527", "IL24")
+plotit(snp="imm_1_205006527","IL24")
+faim3<-testcoloc(snp="imm_1_205006527", "FAIM3")
+plotit(snp="imm_1_205006527","FAIM3")
 ikz<-testcoloc(snp="imm_17_35306733","IKZF3")
 plotit(snp="imm_17_35306733", "IKZF3")
 orm<-testcoloc(snp="imm_17_35306733","ORMDL3")
@@ -387,20 +392,8 @@ plotit(snp="imm_15_77022012", "CTSH")
 glis3<-testcoloc(snp="imm_9_4280823", "GLIS3")
 plotit(snp="imm_9_4280823", "GLIS3")
 
-faim3<-testcoloc(snp="imm_1_205006527","FAIM3")
-plotit(snp="imm_1_205006527", "FAIM3")
-il24<-testcoloc(snp="imm_1_205006527","IL24")
-plotit(snp="imm_1_205006527", "IL24")
-il10<-testcoloc(snp="imm_1_205006527","IL10")
-plotit(snp="imm_1_205006527", "IL10")
-
-
 themis<-testcoloc(snp="imm_6_128335625","THEMIS")
 plotit(snp="imm_6_128335625", "THEMIS")
 ptprk<-testcoloc(snp="imm_6_128335625","PTPRK")
 plotit(snp="imm_6_128335625", "PTPRK")
 
-sirpg<-testcoloc(snp="imm_20_1564206","SIRPG")
-rp117c3<-testcoloc(snp="imm_20_1564206","RP11-77C3.3")
-plotit(snp="imm_20_1564206", "RP11-77C3.3")
-plotit(snp="imm_20_1564206", "SIRPG")

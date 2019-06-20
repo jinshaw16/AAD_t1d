@@ -1,4 +1,4 @@
-#hla_multinomial_n.R
+#hla_multinomial_3.R
 #carries out multinomial logistic regression for the HLA classical alleles/haplotypes (class II)
 #adjusts for top 10 PCs, codes haplotypes/classical alleles additively
 #removes DR3/4s when examining other class II alleles as much confounding and want independent effects of e.g. DR3 and DR4 on their own.
@@ -12,7 +12,8 @@ library(multinomRob)
 
 
 #read imputation results into R:
-load(file="/well/todd/users/jinshaw/aad/under_7/hla_all_2.RData")
+load(file="/well/todd/users/jinshaw/aad/under_7/hla_all_3.RData")
+hla<-hla[!is.na(hla$sex) & hla$sex!=0,]
 
 library(multinomRob)
 hla$g0<-ifelse(hla$group==0,1,0)
@@ -23,9 +24,9 @@ hla$g3<-ifelse(hla$group==3,1,0)
 hlano34<-hla[hla$dr34_1!=1,]
 getlikelihoods<-function(hap, frame, adjusted){
 form0<-as.formula(paste0("g0 ~ 0"))
-form1<-as.formula(paste0("g1 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + ",adjusted,"`",hap,"`"))
-form2<-as.formula(paste0("g2 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + ",adjusted,"`",hap,"`"))
-form3<-as.formula(paste0("g3 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + ",adjusted,"`",hap,"`"))
+form1<-as.formula(paste0("g1 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + sex + ",adjusted,"`",hap,"`"))
+form2<-as.formula(paste0("g2 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + sex + ",adjusted,"`",hap,"`"))
+form3<-as.formula(paste0("g3 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + sex + ",adjusted,"`",hap,"`"))
 
 #having a rule that we need at least 5 from each group to even attempt fitting the model otherwise very very unstable (5 is unstable too, of course!)
 t<-table(frame$group, frame[,hap])
@@ -82,9 +83,9 @@ l_1$id<-c("DR3-DQ2","DR4-DQ8","DR3-DQ2/DR4-DQ8","DRB1*11:04-DQB1*03:01",
 ######################
 getlikelihoodsadj<-function(hap,adj){
 form0<-as.formula(paste0("g0 ~ 0"))
-form1<-as.formula(paste0("g1 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + dr3_1 + dr4_1 + dr34_1 + ",adj," +`",hap,"`"))
-form2<-as.formula(paste0("g2 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + dr3_1 + dr4_1 + dr34_1 + ",adj," +`",hap,"`"))
-form3<-as.formula(paste0("g3 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + dr3_1 + dr4_1 + dr34_1 + ",adj," +`",hap,"`"))
+form1<-as.formula(paste0("g1 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + dr3_1 + dr4_1 + dr34_1 + sex + ",adj," +`",hap,"`"))
+form2<-as.formula(paste0("g2 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + dr3_1 + dr4_1 + dr34_1 + sex + ",adj," +`",hap,"`"))
+form3<-as.formula(paste0("g3 ~ PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + dr3_1 + dr4_1 + dr34_1 + sex + ",adj," +`",hap,"`"))
 
 #having a rule that we need at least 5 from each group to even attempt fitting the model otherwise very very unstable (5 is unstable too, of course!)
 t<-table(hla$group, hla[,hap])
@@ -94,10 +95,11 @@ s4<-sum(t[4,colnames(t) %in% c("1","2")])
 if(s2<5 | s3<5 | s4<5){
 l<-data.frame(unconstrained=NA, constrained=NA, logor1=NA, logse1=NA,
 logor2=NA, logse2=NA,logor3=NA, logse3=NA,
-lb1,ub1,lb2,ub2,lb3,ub3,loglambda=NA,chisq=NA,p=NA,logp=NA)
+lb1=NA,ub1=NA,lb2=NA,ub2=NA,lb3=NA,ub3=NA,loglambda=NA,chisq=NA,p=NA,logp=NA)
 }
 if(s2>=5 & s3>=5 & s4>=5){
-one<-multinomRob(model=list(form0,form1,form2,form3),data=hla, print.level=1, MLEonly=T)
+tryCatch({
+    one<-multinomRob(model=list(form0,form1,form2,form3),data=hla, print.level=1, MLEonly=T)
 llk1<-one$value
 
 equals0<-as.formula(paste0("g1 ~ `",hap,"` + 0"))
@@ -121,19 +123,24 @@ l$loglambda=l$constrained-l$unconstrained
 l$chisq=l$loglambda*-2
 l$p<-pchisq(l$chisq,1, lower.tail=F)
 l$logp<-log10(l$p)*-1
+}, error = function(e) {
+    l<-data.frame(unconstrained=NA, constrained=NA, logor1=NA, logse1=NA,
+logor2=NA, logse2=NA,logor3=NA, logse3=NA,
+lb1=NA,ub1=NA,lb2=NA,ub2=NA,lb3=NA,ub3=NA,loglambda=NA,chisq=NA,p=NA,logp=NA)
+})
 }
 return(l)
 }
 l2_1<-mapply(getlikelihoodsadj,hap=c("dpb10301_1","dpb10402_1","a0201_1","a2402_1","a3201_1","a1101_1","b1801_1", "b3906_1","b4403_1"),
-adj=c("a0201_1 + a2402_1 + b3906_1 + b1801_1",
-"a0201_1 + a2402_1 + b3906_1 + b1801_1",
-"b3906_1 + b1801_1",
-"b3906_1 + b1801_1",
-"b3906_1 + b1801_1",
-"b3906_1 + b1801_1",
-"a0201_1 + a2402_1 + a3201_1",
-"a0201_1 + a2402_1 + a3201_1",
-"a0201_1 + a2402_1 + a3201_1"),SIMPLIFY=F)
+adj=c("a2402_1 + b3906_1",
+"a2402_1 + b3906_1",
+"b3906_1",
+"b3906_1",
+"b3906_1",
+"b3906_1",
+"a2402_1",
+"a2402_1",
+"a2402_1"),SIMPLIFY=F)
 l2_1<-do.call("rbind",l2_1)
 l2_1$id<-c("DPB1*03:01","DPB1*04:02",
 "A*02:01","A*24:02","A*32:01", "A*11:01",
@@ -149,10 +156,10 @@ lout<-lout[order(-lout$logp),]
 lout$ord<-c(nrow(lout):1)
 lout$id<-as.factor(lout$id)
 lout$id<-reorder(lout$id,lout$ord)
-save(lout,file="/well/todd/users/jinshaw/aad/under_7/results/hla_multinomial_2.RData")
+save(lout,file="/well/todd/users/jinshaw/aad/under_7/results/hla_multinomial_3.RData")
 
 
-load(file="/well/todd/users/jinshaw/aad/under_7/results/hla_multinomial_2.RData")
+load(file="/well/todd/users/jinshaw/aad/under_7/results/hla_multinomial_3.RData")
 
 one_out<-ggplot(data=lout, aes(x=logor3,y=as.factor(id))) + geom_point(,colour="blue") +
 geom_point(data=lout, aes(x=logor2,as.numeric(id)+0.2), colour="green") +
@@ -172,7 +179,7 @@ scale_y_discrete(name="Locus") +
 scale_x_continuous(name=bquote("-log"[10]~.(paste0("(p) heterogeneity between <7 and >13"))))+
 theme(axis.title.x=element_text(size=8))
 
-png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo_1/multinom_all_hla_adjusted_dr34_3_n.png", res=800,
+png(file="/well/todd/users/jinshaw/output/aad/under_7/hla/redo_1/multinom_all_hla_adjusted_dr34_3_3.png", res=800,
 width=25, height=20, units="cm")
 grid.arrange(one_out,two_out,ncol=2)
 dev.off()

@@ -1,5 +1,5 @@
-#guessfm_readin_uk_only_redo.R
-## what files were created?
+#guessfm_readin_uk_only_redo_sex_adj_3.R
+
 
 library(ggplot2)
 library(ggbio)
@@ -13,11 +13,11 @@ library(jimisc)
 library(GenomicRanges)
 
 #define regions:
-likelihoods<-read.table(file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_n.txt",
+likelihoods<-read.table(file="/well/todd/users/jinshaw/aad/under_7/results/inds_likelihoods_redo_3.txt",
 header=T, sep="\t", as.is=T)
 likelihoods$pfdr<-p.adjust(likelihoods$p,method="BH")
 likelihoods<-likelihoods[likelihoods$pfdr<0.1,]
-likelihoods<-likelihoods[!likelihoods$loci %in% c("CAMSAP2","CTRB1"),]
+likelihoods<-likelihoods[!likelihoods$id %in% "imm_16_73809828",]
 hits<-likelihoods$id
 
 #set paths
@@ -35,25 +35,25 @@ gene=genes$V1)
 
 #read in
 readitallin<-function(snp){
-load(file=paste0(mydir, snp,"/data.RData"))
+load(file=paste0(mydir, snp,"_sexadj/data.RData"))
 
-mydir<-paste0(mydir,snp,"/")
+mydir<-paste0(mydir,snp,"_sexadj/")
 list.files(mydir)
 
 #create outdir if it doesn't exist:
-if(!dir.exists(paste0(outdir,snp)))
-dir.create(paste0(outdir,snp),recursive=T)
+if(!dir.exists(paste0(outdir,snp,"_sexadj")))
+dir.create(paste0(outdir,snp,"_sexadj"),recursive=T)
 
 
 ## read output with R2GUESS and run a basic qc plot
-if (!file.exists(paste0(outdir,snp,"/model_diagnostics.png"))){
+if (!file.exists(paste0(outdir,snp,"_sexadj/model_diagnostics.png"))){
 ess <- ess.read(f=paste0(mydir,"out_55000_55000"))
-png(file=paste0(outdir,snp,"/model_diagnostics.png"),
+png(file=paste0(outdir,snp,"_sexadj/model_diagnostics.png"),
 res=200, height=20, width=20, units="cm")
 k<-R2GUESS:::plot.ESS(ess)
 dev.off()
 
-png(file=paste0(outdir,snp,"/model_convergence.png"),
+png(file=paste0(outdir,snp,"_sexadj/model_convergence.png"),
 res=200, height=20, width=20, units="cm")
 par(mfrow=c(1,2))
 k1<-R2GUESS::check.convergence(ess)
@@ -69,7 +69,7 @@ dd <- read.snpmod(mydir)
 
 #Examine posterior of number of SNPs in model:
 
-png(file=paste0(outdir,snp,"/model_size.png"),
+png(file=paste0(outdir,snp,"_sexadj/model_size.png"),
 res=200, height=20, width=20, units="cm")
 pp <- pp.nsnp(dd,plot=TRUE,expected=3, overdispersion = 1.00000001)
 dev.off()
@@ -155,7 +155,7 @@ load(file=paste0(mydir,"summx.RData"))
 
 
 pat<-pattern.plot(sm.all,groups)
-ggsave(pat,file=paste0(outdir,snp,"/cum_prob_plot.png"),
+ggsave(pat,file=paste0(outdir,snp,"_sexadj/cum_prob_plot.png"),
 dpi=200, height=20, width=20, units="cm")
 le<-length(unique(summx$tag))
 summx$tag<-reorder(summx$tag,-summx$ppsum)
@@ -168,7 +168,7 @@ chr<-ggchr(summx)  + scale_fill_manual(values=hues) + scale_colour_manual(values
 lds<-ggld(DATA, summx)
 
 
-write.table(summx, file=paste0(outdir,snp,"/credibles.txt"),col.names=T, row.names=F, quote=F, sep="\t")
+write.table(summx, file=paste0(outdir,snp,"_sexadj/credibles.txt"),col.names=T, row.names=F, quote=F, sep="\t")
 #and bed files for Tony (in 37 and 38 builds):
 s<-summx
 s$chromosome=chromosome
@@ -178,10 +178,10 @@ s$posend38<-s$position38
 s$chromosome<-paste0("chr",s$chromosome)
 s1<-s[,c("chromosome","position","posend","snp")]
 s2<-s[,c("chromosome","position38","posend38","snp")]
-write.table(s1,file=paste0(outdir,snp,"/credibles_37.bed"),col.names=F, row.names=F, quote=F, sep="\t")
-write.table(s2,file=paste0(outdir,snp,"/credibles_38.bed"),col.names=F, row.names=F, quote=F, sep="\t")
+write.table(s1,file=paste0(outdir,snp,"_sexadj/credibles_37.bed"),col.names=F, row.names=F, quote=F, sep="\t")
+write.table(s2,file=paste0(outdir,snp,"_sexadj/credibles_38.bed"),col.names=F, row.names=F, quote=F, sep="\t")
 out<-tracks(chr,signals,lds, heights=c(1,2,1))
-ggsave(out,file=paste0(outdir,snp,"/init_out.png"),
+ggsave(out,file=paste0(outdir,snp,"_sexadj/init_out.png"),
 dpi=200, height=25, width=20, units="cm")
 
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
@@ -250,7 +250,7 @@ e1<-e[e$SNPChr==chromosome & e$SNPPos>min(summx$position)-50000 & e$SNPPos< max(
 if(snp=="imm_9_4281928"){
 out1<-tracks(t,chr,signals,lds,heights=c(1,1,2,1),xlim=c(4280000,max(e1$SNPPos)))
 }
-ggsave(out1,file=paste0(outdir,snp,"/init_out_genes.png"),
+ggsave(out1,file=paste0(outdir,snp,"_sexadj/init_out_genes.png"),
 dpi=200, height=30, width=20, units="cm")
 
 e1$logzscore<-ifelse(e1$Zscore>0,log10(e1$Zscore),
@@ -270,10 +270,10 @@ e1<-e1[e1$Pvalue<5*10^-8,]
 summx$SNPPos<-summx$position
 
 #run the disease comparison with this set of credible SNPs:
-system(paste0("Rscript /users/todd/jinshaw/programs/aad/under_7/imputed_test_uk.R ",snp))
+system(paste0("Rscript /users/todd/jinshaw/programs/aad/under_7/imputed_test_uk_sex_adj_3.R ",snp))
 
 #and with the effect direction of the SNPs with disease for comparison:
-direction<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/results/",snp,"_effects_uk.txt"),header=T,
+direction<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/results/",snp,"_effects_uk_sex_adj_3.txt"),header=T,
 sep="\t")
 direction$se<-sqrt(direction$Var.beta)
 direction$lb<-direction$beta-(qnorm(0.975)*direction$se)
@@ -289,7 +289,7 @@ ds$ppsum<-round(ds$ppsum,digits=4)
 ds$beta<-round(ds$beta,digits=4)
 ds$pp<-format(ds$pp,scientific=T,digits=3)
 ds<-ds[order(ds$position),]
-write.table(ds,file=paste0("/well/todd/users/jinshaw/output/aad/under_7/guessfm/uk/",snp,"/supl_mat.txt"),col.names=T,row.names=F,
+write.table(ds,file=paste0("/well/todd/users/jinshaw/output/aad/under_7/guessfm/uk/",snp,"_sexadj/supl_mat_sex_adj_3.txt"),col.names=T,row.names=F,
 sep="\t",quote=F)
 
 e1<-merge(e1,direction, by="SNPPos",all.x=T)
@@ -323,11 +323,11 @@ if (snp=="imm_9_4280823"){
 out2<-tracks(trying1, t, chr, signals,lds,heights=c(2,1,1,2,1), xlim=c(4280000,max(e1$SNPPos)))
 }
 
-ggsave(out2,file=paste0(outdir,snp,"/init_out_genes_eqtls.png"),
+ggsave(out2,file=paste0(outdir,snp,"_sexadj/init_out_genes_eqtls_3.png"),
 dpi=200, height=35, width=20, units="cm")
 
 #and with the effect direction of the SNPs with disease for comparison:
-direction<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/results/",snp,"_effects_uk.txt"),header=T,
+direction<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/results/",snp,"_effects_uk_sex_adj_3.txt"),header=T,
 sep="\t",as.is=T)
 direction$se<-sqrt(direction$Var.beta)
 direction$lb<-direction$beta-(qnorm(0.975)*direction$se)
@@ -399,34 +399,34 @@ scale_colour_manual(name="Tag group",values=c(hues))
 
 if(snp!="imm_9_4280823"){
 out4<-tracks(t1,direct1,trying2, xlab=paste0("Position along chromosome ",chromosome),heights=c(1,1,3), xlim=c(min(o1$start,o1$end,min(e1$SNPPos)), max(e1$SNPPos)))
-ggsave(out4,file=paste0(outdir,snp,"/new_eqtls_directions.png"),
+ggsave(out4,file=paste0(outdir,snp,"_sexadj/new_eqtls_directions_3.png"),
 dpi=800, height=20, width=15, units="cm")
 }
 if(snp=="imm_9_4280823"){
 out4<-tracks(t1,direct1,trying2, xlab=paste0("Position along chromosome ",chromosome),heights=c(1,1,3), xlim=c(4150000, max(e1$SNPPos)))
-ggsave(out4,file=paste0(outdir,snp,"/new_eqtls_directions.png"),
+ggsave(out4,file=paste0(outdir,snp,"_sexadj/new_eqtls_directions_3.png"),
 dpi=800, height=20, width=15, units="cm")
 }
 
 if(snp!="imm_9_4280823"){
 out3<-tracks(direct, trying1,t,chr,signals,lds,heights=c(1,2,1,1,2,1),xlim=c(min(o1$start,o1$end), max(e1$SNPPos)))
-ggsave(out3,file=paste0(outdir,snp,"/init_out_genes_eqtls_directions.png"),
+ggsave(out3,file=paste0(outdir,snp,"_sexadj/init_out_genes_eqtls_directions_3.png"),
 dpi=200, height=40, width=20, units="cm")
 }
 if(snp=="imm_9_4280823"){
 out3<-tracks(direct, trying1,t,chr,signals,lds,heights=c(1,2,1,1,2,1),xlim=c(4150000, max(e1$SNPPos)))
-ggsave(out3,file=paste0(outdir,snp,"/init_out_genes_eqtls_directions.png"),
+ggsave(out3,file=paste0(outdir,snp,"_sexadj/init_out_genes_eqtls_directions_3.png"),
 dpi=200, height=40, width=20, units="cm")
 }
 
 if(snp!="imm_9_4280823"){
 out5<-tracks(t1,direct3,trying3, xlab=paste0("Position along chromosome ",chromosome),heights=c(1,1,3), xlim=c(min(o1$start,o1$end,min(e1$SNPPos)), max(e1$SNPPos)))
-ggsave(out5,file=paste0(outdir,snp,"/new_eqtls_directions_tony.png"),
+ggsave(out5,file=paste0(outdir,snp,"_sexadj/new_eqtls_directions_tony_3.png"),
 dpi=800, height=20, width=15, units="cm")
 }
 if(snp=="imm_9_4280823"){
 out5<-tracks(t1,direct3,trying3, xlab=paste0("Position along chromosome ",chromosome),heights=c(1,1,3), xlim=c(4150000, max(e1$SNPPos)))
-ggsave(out5,file=paste0(outdir,snp,"/new_eqtls_directions_tony.png"),
+ggsave(out5,file=paste0(outdir,snp,"_sexadj/new_eqtls_directions_tony_3.png"),
 dpi=800, height=20, width=15, units="cm")
 }
 }

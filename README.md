@@ -45,33 +45,33 @@ readin_ichip.R  -> Reads in immunoChip data from all available collections, remo
 hla_imputation_redo.R   -> Uses HIBAG to impute HLA classical alleles for DRB1, DQA1, DAB1, A, B and C
 hla_check.R     -> Compares imputed classical HLA alleles to directly genotyped on a subset of individuals with classical genotyping data available
 hla_readin.R    -> Reads in the imputed classical HLA genotypes and converts to class II haplotypes that are associated with T1D and codes up correctly for analysis. Removes alleles called with <0.5 posterior probability.
-hla_multinomial_n.R     -> Performs multinomial logistic regressions, from which heterogeneity tests are performed comparing constrained and unconstrained models with regards to the effect size between <7s and >13s.
+hla_multinomial_3.R     -> Performs multinomial logistic regressions, from which heterogeneity tests are performed comparing constrained and unconstrained models with regards to the effect size between <7s and >13s.
 ```
 
 ### non-HLA analysis (primary):
 ```
 impute_missing_snps.R   -> Where SNPs of interest were removed due to QC, imputing them so we can use them in the analyses. Using IMPUTE2.
 imputation_readin.R     -> Reads in the imputation results, keeping only the index SNP of interest once checking it passes all QC checks
-multinomial_redo_n.R    -> Carries out multinomial regression on all 55 T1D-associted variants to test for heterogneity of effect size between <7s and <13s using all individuals in analysis.
-multinomial_readin.R    -> Reads in the results form the above script, which were saved for examiniation in this script
+multinomial_redo_3.R    -> Carries out multinomial regression on all 55 T1D-associted variants to test for heterogneity of effect size between <7s and <13s using all individuals in analysis.
+multinomial_readin_3.R    -> Reads in the results form the above script, which were saved for examiniation in this script
 ```
 ### non-HLA analyses (sensitivity):
 ```
-multinomial_uk_only.R   -> multinomial regression of the 55 regions using only individuals from the UK/northern Ireland to ensure associations aren't due to population structure
-multinomial_readin_uk_only.R    -> Reads in the results form the above script, which were saved for examiniation in this script
-multinomial_sensitivity_to_cutoff.R -> multinomial regression of the 55 regions using all individuals but cutting strata at <6 and <5 instead of <7 and re-examining results
+multinomial_uk_only_sex_adj_3.R   -> multinomial regression of the 55 regions using only individuals from the UK/northern Ireland to ensure associations aren't due to population structure
+multinomial_readin_uk_only_sex_adj_3.R    -> Reads in the results form the above script, which were saved for examiniation in this script
+multinomial_sensitivity_to_cutoff_sex_adj.R -> multinomial regression of the 55 regions using all individuals but cutting strata at <6 and <5 instead of <7 and re-examining results
 ```
 
 ### fine-mapping:
 ```
-guessfm_setup_uk_only_redo.R -> sets up GUESSFM procudure by imptuting 0.5Mb around the regions of interest, removing low quality imputed variants then running stochastic search. UK/NI individuals only included in analysis.
-imputed_test_uk.R	-> gets summary stats for the credible SNPs, these are then used in the next script.
-guessfm_readin_uk_only_redo.R        -> reads in the results of the stochastic search and does post processing including calculating ABFs for each model including those that were pruned out for stoachstic search
+guessfm_setup_uk_only_redo_sex_adj.R -> sets up GUESSFM procudure by imptuting 0.5Mb around the regions of interest, removing low quality imputed variants then running stochastic search. UK/NI individuals only included in analysis.
+imputed_test_uk_sex_adj_3.R	-> gets summary stats for the credible SNPs, these are then used in the next script.
+guessfm_readin_uk_only_redo_sex_adj_3.R        -> reads in the results of the stochastic search and does post processing including calculating ABFs for each model including those that were pruned out for stoachstic search
 ```
 
 ### other:
 ```
 table_1.R	-> generates Table 1 in manuscript, baseline characteristics
-coloc_ikzf3.R   -> Formally tests for colocalisation between disease and whole blood eQTLs using coloc
-greml_heritability.R	-> Estimates narrow sense chip heritability by age-at-diagnosis group
+coloc_ikzf3_sexadj_3.R   -> Formally tests for colocalisation between disease and whole blood eQTLs using coloc
+greml_heritability_sex_adj_3.R	-> Estimates narrow sense chip heritability by age-at-diagnosis group
 ```

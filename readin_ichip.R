@@ -174,6 +174,7 @@ save(finn, file=paste0(d,"all_finns_preqc.RData"))
 #############################################################################################################
 qcit<-function(name, xhomlim, hetmin, hetmax){
 gen<-get(load(paste0(d,"all_",name,"_preqc.RData")))
+gen<-gen[rownames(gen) %in% rownames(gen@samples[!is.na(gen@samples$affected),]),]
 all<-gen@samples
 
 #1) Sex discordance
@@ -186,15 +187,15 @@ discordance$uniqueID<-rownames(discordance)
 discordance<-merge(discordance, all, by="uniqueID")
 library(ggplot2)
 discordance$homozygosity<-1-discordance$Heterozygosity
-discordance<-discordance[!is.na(discordance$sex),]
-sexdisc<-ggplot(data=discordance, aes(as.factor(sex), homozygosity)) + geom_boxplot() + coord_cartesian(ylim=c(0.5,1)) +
+discordance1<-discordance[!is.na(discordance$sex),]
+sexdisc<-ggplot(data=discordance1, aes(as.factor(sex), homozygosity)) + geom_boxplot() + coord_cartesian(ylim=c(0.5,1)) +
   geom_segment(x=0, xend=3, y=xhomlim, yend=xhomlim, color="Red", linetype="dashed") + scale_x_discrete(name="Sex", breaks=c(1,2), labels=c("Male", "Female")) +
   scale_y_continuous(name="Homozygosity")
 #cutting off at xhomlim - any Females that are >xhomlim homozygous are discounted, and any Males <xhomlim are discounted
-discordance$drop<-ifelse(discordance$sex==1 & discordance$homozygosity<xhomlim,1,
-                         ifelse(discordance$sex==2 & discordance$homozygosity>xhomlim, 1, 0))
-discordance<-discordance[discordance$drop==1,]
-drop<-discordance$uniqueID
+discordance1$drop<-ifelse(discordance1$sex==1 & discordance1$homozygosity<xhomlim,1,
+                         ifelse(discordance1$sex==2 & discordance1$homozygosity>xhomlim, 1, 0))
+discordance2<-discordance1[discordance1$drop==1,]
+drop<-discordance2$uniqueID
 
 
 #create a file which will be added to cumulatively of sample exclusions
@@ -239,6 +240,13 @@ sample.exclusions<-merge(sample.exclusions, sample.exclusions.hets, by="uniqueID
 
 #do the per-marker QC on only patients surviving the per-individual QC:
 gen<-gen[!(rownames(gen) %in% sample.exclusions$uniqueID),]
+#finally fill in the sex data if obvious from genotype data given the homozygocity rate on the x chromosome:
+rownames(discordance)<-discordance$uniqueID
+discordance<-discordance[rownames(gen),]
+w<-which(is.na(gen@samples$sex))
+gen@samples$sex[w]<-ifelse(discordance[w,"homozygosity"]>0.65 & discordance[w,"homozygosity"]<0.85,2,
+ifelse(discordance[w,"homozygosity"]>0.93,1,NA))
+
 write.plink(file.base=paste0(d,name,"_post_sampqc"),
 snps=as(gen,"SnpMatrix"),
 pedigree=gen@samples$pedigree,
@@ -315,6 +323,9 @@ ifelse(substr(i$V1,1,7)=="4000000","uva-controls",
 ifelse(substr(i$V1,1,7)=="6000000","finn",i$V1)))))
 i$uniqueID<-ifelse(!i$V2 %in% rownames(g),paste0(i$ped,".",i$V2),i$V2)
 g<-g[rownames(g) %in% i$uniqueID,colnames(g) %in% snps]
+rownames(i)<-i$uniqueID
+i<-i[rownames(g),]
+g@samples$sex<-i$V5
 save(g,file=paste0(d,name,"_unrel_postqc.RData"))
 return(g)
 }
@@ -341,7 +352,7 @@ all@samples$onset<-ifelse(all@samples$onset<0 & !is.na(all@samples$onset),NA,all
 all<-all[!(is.na(all@samples$onset) & all@samples$affected==2),]
 samples=all@samples
 snps=all@snps
-write.plink(file.base=paste0(aaddir,"all_ages_n"),
+write.plink(file.base=paste0(aaddir,"all_ages_3"),
 snps=as(all,"SnpMatrix"),
 pedigree=samples$pedigree,
 id=rownames(samples),
@@ -362,19 +373,19 @@ cat(paste0("#$ -N pcs
 #$ -pe shmem 4
 #$ -P todd.prjc
 #$ -q short.qc\n"))
-cat(paste0("/apps/well/plink/1.90b3/plink --bfile ",aaddir,"all_ages_n --indep-pairwise 1000 50 0.2 --out ",aaddir,"pruned\n"))
-cat(paste0("/apps/well/plink/1.90b3/plink --bfile ",aaddir,"all_ages_n --exclude ",aaddir,"pruned.prune.out",
-" --make-bed --keep-allele-order --out ",aaddir,"forpcad_n\n"))
-cat(paste0("~/software/plink2 --bfile ",aaddir,"forpcad_n ",
-"--exclude range /well/todd/users/jinshaw/aad/under_7/mhc.txt --make-bed --out ",aaddir,"forpcad_nomhc_n\n"))
+cat(paste0("/apps/well/plink/1.90b3/plink --bfile ",aaddir,"all_ages_3 --indep-pairwise 1000 50 0.2 --out ",aaddir,"pruned\n"))
+cat(paste0("/apps/well/plink/1.90b3/plink --bfile ",aaddir,"all_ages_3 --exclude ",aaddir,"pruned.prune.out",
+" --make-bed --keep-allele-order --out ",aaddir,"forpcad_3\n"))
+cat(paste0("~/software/plink2 --bfile ",aaddir,"forpcad_3 ",
+"--exclude range /well/todd/users/jinshaw/aad/under_7/mhc.txt --make-bed --out ",aaddir,"forpcad_nomhc_3\n"))
 #calculate principal components
-cat(paste0("~/software/plink2 --bfile ",aaddir,"forpcad_nomhc_n --allow-no-sex --pca approx 10 --out ",aaddir,"pcs\n"))
+cat(paste0("~/software/plink2 --bfile ",aaddir,"forpcad_nomhc_3 --allow-no-sex --pca approx 10 --out ",aaddir,"pcs3\n"))
 sink()
 
 system("qsub ~/programs/aad/under_7/pccalc.sh")
 
 aaddir<-"/well/todd/users/jinshaw/aad/"
-pcs<-read.table(file=paste0(aaddir,"pcs.eigenvec"),header=T, as.is=T,comment.char="")
+pcs<-read.table(file=paste0(aaddir,"pcs3.eigenvec"),header=T, as.is=T,comment.char="")
 rownames(pcs)<-pcs$IID
 pcs<-pcs[,c(3:12)]
 pcs<-pcs[rownames(all),]
@@ -382,4 +393,4 @@ colnames(pcs)<-paste0("PC",c(1:10))
 
 all@samples<-cbind(all@samples, pcs)
 
-save(all,file=paste0(d,"all_inds_unrel_postqc.RData"))
+save(all,file=paste0(d,"all_inds_unrel_postqc_3.RData"))
