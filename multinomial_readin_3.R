@@ -90,6 +90,13 @@ grid.arrange(one,two,ncol=2)
 dev.off()
 
 
+pdf(file="/well/todd/users/jinshaw/output/aad/under_7/multinom/redo_1/inds_het_tests_all_inc_midrange_sexadj_3_sm.pdf",
+width=10, height=7)
+grid.arrange(one,two,ncol=2)
+dev.off()
+
+
+
 #now only those with a hint of heterogeneity (FDR<0.1):
 r$pfdr<-p.adjust(r$p, method = "BH")
 r1<-r[r$pfdr<0.1,]
@@ -157,7 +164,8 @@ not<-r[r$pfdr>0.1,]
 not$hit<-ifelse((not$logor1<not$logor2 & not$logor2 < not$logor3 & abs(not$logor1)>abs(not$logor3)) |
 (not$logor1 > not$logor2 & not$logor2 > not$logor3 & abs(not$logor1)>abs(not$logor3)),1,0)
 t<-table(not$hit)
-pbinom(q=t[2],size=(t[1]+t[2]), p=1/6,lower.tail=F)
+binom.test(t[2],n=(t[1]+t[2]),p=1/6,alternative="two.sided")
+
 
 ########################
 #NOW FOR THE MAFS PLOTS#
