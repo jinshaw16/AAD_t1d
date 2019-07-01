@@ -10,11 +10,11 @@ library(ggplot2)
 args=commandArgs(trailingOnly=TRUE)
 d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 #read SNP and phenotype data:
-#load(file=paste0(d,"all_inds_unrel_postqc_3.RData"))
+load(file=paste0(d,"all_inds_unrel_postqc_3.RData"))
 
-#uk<-all@samples
+uk<-all@samples
 #output snptest file for the use in GUESSFM (which imputes one additional poerson by accident)
-#uk<-uk[uk$country %in% c("UK","NI"),]
+uk<-uk[uk$country %in% c("UK","NI"),]
 #s1<-uk[,c("uniqueID","affected","PC1","PC2","PC3","PC4","PC5","sex")]
 #headit<-data.frame(ID_1=0,ID_2=0,missing=0,t1d="B",PC1="C",PC2="C",PC3="C",PC4="C",PC5="C",sex="D")
 #s1$ID_1=s1$uniqueID
@@ -63,7 +63,7 @@ d<-"/well/todd/users/jinshaw/t1d_risk/immunochip/"
 #rownames(pheno)<-pheno$uniqueID
 #pheno<-pheno[rownames(uk),]
 
-#pcs<-read.table(file="/well/todd/users/jinshaw/aad/under_7/pcad_uk_n.eigenvec",as.is=T, header=F)
+#pcs<-read.table(file="/well/todd/users/jinshaw/aad/under_7/pcad_uk_3.eigenvec",as.is=T, header=F)
 #pcs<-pcs[,c(1:12)]
 #colnames(pcs)<-c("ped","mem",paste0("PC",1:10))
 #rownames(pcs)<-pcs$mem

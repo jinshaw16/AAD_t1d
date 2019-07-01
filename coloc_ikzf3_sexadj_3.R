@@ -26,7 +26,7 @@ colnames(DATA)<-ifelse(substr(colnames(DATA),1,1) %in% c("1","2","3","4","5","6"
 paste0("X",colnames(DATA)),colnames(DATA))
 #get the alleles:
 system(paste0("zcat /well/todd/users/jinshaw/aad/under_7/imputation/",
-snp,"_n_out.gz | awk -F \' \' \' {print $1,$2,$3,$4,$5}\' > /well/todd/users/jinshaw/aad/under_7/imputation/",snp,"alleles"))
+snp,"_3_out.gz | awk -F \' \' \' {print $1,$2,$3,$4,$5}\' > /well/todd/users/jinshaw/aad/under_7/imputation/",snp,"alleles"))
 alls<-read.table(file=paste0("/well/todd/users/jinshaw/aad/under_7/imputation/",snp,"alleles"),header=F,as.is=T)
 alls$V2<-gsub(":",".",alls$V2)
 alls$V2<-gsub("<",".",alls$V2)
@@ -368,9 +368,11 @@ scale_colour_continuous(name=paste0("LD with top \n",gene," eQTL"))
 o2<-ggplot(data=dfb1[dfb1$trait==paste0("T1D"),], aes(SNPPos, absz, colour=ld)) + geom_point() +
 scale_y_continuous(name="Absolute T1D z-score") +
 scale_colour_continuous(name=paste0("LD with top \n",gene," eQTL"))
-t<-tracks(o1,o2)
+t<-tracks(o1,o2, xlab=paste0("Position along chromosome ",k1$GeneChr[1]))
 ggsave(t, file=paste0("/well/todd/users/jinshaw/output/aad/under_7/coloc/",snp,"_",gene,"_sexadj_3.png"),
 width=25,height=20, dpi=800, units="cm")
+ggsave(t, file=paste0("/well/todd/users/jinshaw/output/aad/under_7/coloc/",snp,"_",gene,"_sexadj_3.pdf"),
+width=10, height=7)
 }
 
 il10<-testcoloc(snp="imm_1_205006527", "IL10")
