@@ -43,8 +43,8 @@ Now outlining the analysis pipeline so if data were made available to a collabor
 ```
 readin_ichip.R  -> Reads in immunoChip data from all available collections, removes related individuals, inferred from SNP data (to 2nd degree), merges in other phenotype data including principal components generated from SNP data
 hla_imputation_redo.R   -> Uses HIBAG to impute HLA classical alleles for DRB1, DQA1, DAB1, A, B and C
-hla_check.R     -> Compares imputed classical HLA alleles to directly genotyped on a subset of individuals with classical genotyping data available
 hla_readin.R    -> Reads in the imputed classical HLA genotypes and converts to class II haplotypes that are associated with T1D and codes up correctly for analysis. Removes alleles called with <0.5 posterior probability.
+hla_check.R     -> Compares imputed classical HLA alleles to directly genotyped on a subset of individuals with classical genotyping data available
 hla_multinomial_3.R     -> Performs multinomial logistic regressions, from which heterogeneity tests are performed comparing constrained and unconstrained models with regards to the effect size between <7s and >13s.
 ```
 
