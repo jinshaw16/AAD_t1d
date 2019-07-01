@@ -74,4 +74,5 @@ guessfm_readin_uk_only_redo_sex_adj_3.R        -> reads in the results of the st
 table_1.R	-> generates Table 1 in manuscript, baseline characteristics
 coloc_ikzf3_sexadj_3.R   -> Formally tests for colocalisation between disease and whole blood eQTLs using coloc
 greml_heritability_sex_adj_3.R	-> Estimates narrow sense chip heritability by age-at-diagnosis group
+figure_3_sex_adj_3.R	-> Generates components for Figure 3 in manuscript
 ```
