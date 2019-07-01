@@ -167,3 +167,56 @@ sink()
 
 
 
+
+#same thing but for a latex table (for thesis):
+addlatex<-function(prevs,und,mid,old){
+l<-system(paste0("awk -F \'\t\' \'NR==8\' /well/todd/users/jinshaw/aad/under_7/outreml_",und,"_sexadj.hsq"),intern=T)
+l<-strsplit(l,split="\t")
+h<-data.frame(h=as.numeric(l[[1]][2]), se=as.numeric(l[[1]][3]))
+h$lb<-h$h-(qnorm(0.975)*h$se)
+h$ub<-h$h+(qnorm(0.975)*h$se)
+l1<-system(paste0("awk -F \'\t\' \'NR==8\' /well/todd/users/jinshaw/aad/under_7/outreml_",mid,"_sexadj.hsq"),intern=T)
+l1<-strsplit(l1,split="\t")
+h1<-data.frame(h=as.numeric(l1[[1]][2]), se=as.numeric(l1[[1]][3]))
+h1$lb<-h1$h-(qnorm(0.975)*h1$se)
+h1$ub<-h1$h+(qnorm(0.975)*h1$se)
+l2<-system(paste0("awk -F \'\t\' \'NR==8\' /well/todd/users/jinshaw/aad/under_7/outreml_",old,"_sexadj.hsq"),intern=T)
+l2<-strsplit(l2,split="\t")
+h2<-data.frame(h=as.numeric(l2[[1]][2]), se=as.numeric(l2[[1]][3]))
+h2$lb<-h2$h-(qnorm(0.975)*h2$se)
+h2$ub<-h2$h+(qnorm(0.975)*h2$se)
+
+
+cat(paste0(prevs,"&",round(h$h,digits=3), " (",round(h$lb,digits=3),", ",round(h$ub,digits=3),")&",
+round(h1$h,digits=3), " (",round(h1$lb,digits=3),", ",round(h1$ub,digits=3),")&",
+round(h2$h,digits=3), " (",round(h2$lb,digits=3),", ",round(h2$ub,digits=3),") \\\\\n"))
+}
+
+
+sink(file="/well/todd/users/jinshaw/output/aad/under_7/greml/heritibilities_sexadj_latex_hla.txt")
+cat(paste0("\\begin{tabular}{c c c c c}
+\\hline
+Disease prevalence (\\%) (<7,7-13,>13)&<7&7-13&>13 including HLA  \\\\ [0.5ex]
+\\hline
+"))
+addlatex("0.4,0.4,0.4","under_7","mid_range","over_13")
+addlatex("0.5,0.3,0.3","under_7_0.005","mid_range_0.003","over_13_0.003")
+addlatex("0.5,0.2,0.2","under_7_0.005","mid_range_0.002","over_13_0.002")
+cat(paste0("\\hline
+\\end{tabular}"))
+sink()
+
+
+sink(file="/well/todd/users/jinshaw/output/aad/under_7/greml/heritibilities_sexadj_latex_nohla.txt")
+cat(paste0("\\begin{tabular}{c c c c c}
+\\hline       
+Disease prevalence (\\%) (<7,7-13,>13)&<7&7-13&>13 \\\\ [0.5ex]
+\\hline
+"))
+addlatex("0.4,0.4,0.4","under_7nomhc","mid_rangenomhc","over_13nomhc")
+addlatex("0.5,0.3,0.3","under_7nomhc_0.005","mid_rangenomhc_0.003","over_13nomhc_0.003")
+addlatex("0.5,0.2,0.2","under_7nomhc_0.005","mid_rangenomhc_0.002","over_13nomhc_0.002")
+cat(paste0("\\hline
+\\end{tabular}"))
+sink()
+
